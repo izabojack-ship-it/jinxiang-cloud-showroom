@@ -4,7 +4,7 @@
 
 ## 公開網址
 
-部署完成後會顯示於 GitHub Pages（見倉庫 Settings → Pages）。
+https://izabojack-ship-it.github.io/jinxiang-cloud-showroom/
 
 ## 導覽順序
 
