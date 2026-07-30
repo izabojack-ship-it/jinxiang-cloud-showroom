@@ -1,0 +1,18 @@
+# 不上線：原始拍攝、中間成品、本機腳本
+一樓*/
+二樓*/
+工廠大門/
+房1*/
+環景成品/
+環景成品圖/
+金享大圖/
+scripts/
+*.xlsx
+啟動展間.bat
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/

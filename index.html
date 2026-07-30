@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0c1016">
+  <title>金享車業雲端展間 · 360° 環景</title>
+  <meta name="description" content="金享車業雲端展間 · 15 站 360° 虛擬實境環景導覽">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.1/index.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5.14.1/index.css">
+  <link rel="stylesheet" href="./css/tour.css?v=49">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three/build/three.module.js",
+      "@photo-sphere-viewer/core": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.1/index.module.js",
+      "@photo-sphere-viewer/markers-plugin": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5.14.1/index.module.js",
+      "@photo-sphere-viewer/autorotate-plugin": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/autorotate-plugin@5.14.1/index.module.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="viewer" aria-label="360° 環景檢視器"></div>
+
+  <div id="f360-loader" class="f360-loader" role="status" aria-live="polite">
+    <div class="f360-loader__inner">
+      <div class="f360-loader__ring" aria-hidden="true"></div>
+      <p class="f360-loader__title">金享車業雲端展間</p>
+      <p class="f360-loader__sub">正在載入環景導覽…</p>
+    </div>
+  </div>
+
+  <div id="f360-fade" class="f360-fade" aria-hidden="true"></div>
+
+  <div class="f360-ui">
+    <header class="f360-brand">
+      <p class="f360-brand__eyebrow">虛擬實境工廠導覽</p>
+      <p class="f360-brand__title">金享車業雲端展間</p>
+      <div class="f360-brand__meta">
+        <p id="f360-scene-name" class="f360-brand__scene"></p>
+        <p id="f360-floor" class="f360-brand__floor"></p>
+      </div>
+      <div class="f360-progress" aria-hidden="true">
+        <div id="f360-progress-bar" class="f360-progress__bar"></div>
+      </div>
+      <p id="f360-progress-text" class="f360-progress__text"></p>
+    </header>
+
+    <aside id="f360-next-card" class="f360-next-card" aria-live="polite">
+      <span class="f360-next-card__tag">建議下一站</span>
+      <p id="f360-next-name" class="f360-next-card__name">—</p>
+      <p class="f360-next-card__hint">旋轉畫面，點擊金色熱點前往</p>
+      <button id="f360-goto-next" type="button" class="f360-next-card__btn">前往下一站</button>
+    </aside>
+
+    <div class="f360-route-controls" aria-label="動線控制">
+      <button id="f360-prev" type="button" class="f360-route-btn" disabled>
+        <span class="f360-route-btn__arrow" aria-hidden="true">←</span>
+        <span class="f360-route-btn__label">
+          <span class="f360-route-btn__kicker">上一站</span>
+          <span id="f360-prev-name" class="f360-route-btn__name">—</span>
+        </span>
+      </button>
+      <button id="f360-reset" type="button" class="f360-reset" aria-label="重設視角">重設視角</button>
+      <button id="f360-next" type="button" class="f360-route-btn f360-route-btn--primary" disabled>
+        <span class="f360-route-btn__label">
+          <span class="f360-route-btn__kicker">下一站</span>
+          <span id="f360-next-btn-name" class="f360-route-btn__name">—</span>
+        </span>
+        <span class="f360-route-btn__arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
+
+    <div class="f360-radar" aria-label="方位指示">
+      <svg class="f360-radar__svg" viewBox="0 0 80 80" aria-hidden="true">
+        <circle class="f360-radar__disc" cx="40" cy="40" r="36"></circle>
+        <circle class="f360-radar__grid" cx="40" cy="40" r="24"></circle>
+        <circle class="f360-radar__grid" cx="40" cy="40" r="12"></circle>
+        <line class="f360-radar__grid" x1="40" y1="4" x2="40" y2="76"></line>
+        <line class="f360-radar__grid" x1="4" y1="40" x2="76" y2="40"></line>
+        <line id="f360-radar-beam" class="f360-radar__beam" x1="40" y1="40" x2="40" y2="10"></line>
+        <text class="f360-radar__n" x="40" y="14" text-anchor="middle">N</text>
+      </svg>
+      <span class="f360-radar__caption">閒置自動旋轉 · 拖曳可暫停</span>
+    </div>
+
+    <div id="f360-thumbs-dock" class="f360-thumbs-dock">
+      <button id="f360-thumbs-toggle" type="button" class="f360-thumbs-toggle" aria-expanded="true" aria-controls="f360-thumbs">
+        <span class="f360-thumbs-toggle__label">展區動線</span>
+        <span id="f360-thumbs-toggle-meta" class="f360-thumbs-toggle__meta">15 站</span>
+        <span class="f360-thumbs-toggle__chev" aria-hidden="true"></span>
+      </button>
+      <nav id="f360-thumbs" class="f360-thumbs" aria-label="導覽動線站點"></nav>
+    </div>
+  </div>
+
+  <script type="module" src="./js/tour.js?v=49"></script>
+</body>
+</html>

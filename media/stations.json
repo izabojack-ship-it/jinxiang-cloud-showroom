@@ -1,0 +1,449 @@
+[
+  {
+    "id": "station-gate",
+    "title": "工廠大門",
+    "file": "station-gate.jpg",
+    "width": 8192,
+    "height": 4096,
+    "photo_count": 60,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-gate-next",
+        "target": "station-1f-qa-lab",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "一樓品保實驗室 →"
+      }
+    ]
+  },
+  {
+    "id": "station-1f-qa-lab",
+    "title": "一樓品保實驗室",
+    "file": "station-1f-qa-lab.jpg",
+    "width": 8192,
+    "height": 4096,
+    "photo_count": 50,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-1f-qa-lab-prev",
+        "target": "station-gate",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 工廠大門"
+      },
+      {
+        "id": "link-station-1f-qa-lab-next",
+        "target": "station-1f-measure",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "一樓量測區 →"
+      }
+    ]
+  },
+  {
+    "id": "station-1f-measure",
+    "title": "一樓量測區",
+    "file": "station-1f-measure.jpg",
+    "width": 10240,
+    "height": 5120,
+    "photo_count": 86,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-1f-measure-prev",
+        "target": "station-1f-qa-lab",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 一樓品保實驗室"
+      },
+      {
+        "id": "link-station-1f-measure-next",
+        "target": "station-1f-mold",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "一樓研發模具室 →"
+      }
+    ]
+  },
+  {
+    "id": "station-1f-mold",
+    "title": "一樓研發模具室",
+    "file": "station-1f-mold.jpg",
+    "width": 10240,
+    "height": 5120,
+    "photo_count": 86,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-1f-mold-prev",
+        "target": "station-1f-measure",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 一樓量測區"
+      },
+      {
+        "id": "link-station-1f-mold-next",
+        "target": "station-1f-hallway",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "一樓走道空間 →"
+      }
+    ]
+  },
+  {
+    "id": "station-1f-hallway",
+    "title": "一樓走道空間",
+    "file": "station-1f-hallway.jpg",
+    "width": 8192,
+    "height": 4096,
+    "photo_count": 76,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-1f-hallway-prev",
+        "target": "station-1f-mold",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 一樓研發模具室"
+      },
+      {
+        "id": "link-station-1f-hallway-next",
+        "target": "station-1f-line-front",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "一樓生產線-前 →"
+      }
+    ]
+  },
+  {
+    "id": "station-1f-line-front",
+    "title": "一樓生產線-前",
+    "file": "station-1f-line-front.jpg",
+    "width": 10240,
+    "height": 5120,
+    "photo_count": 65,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-1f-line-front-prev",
+        "target": "station-1f-hallway",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 一樓走道空間"
+      },
+      {
+        "id": "link-station-1f-line-front-next",
+        "target": "station-1f-line-mid",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "一樓生產線-中 →"
+      }
+    ]
+  },
+  {
+    "id": "station-1f-line-mid",
+    "title": "一樓生產線-中",
+    "file": "station-1f-line-mid.jpg",
+    "width": 10240,
+    "height": 5120,
+    "photo_count": 54,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-1f-line-mid-prev",
+        "target": "station-1f-line-front",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 一樓生產線-前"
+      },
+      {
+        "id": "link-station-1f-line-mid-next",
+        "target": "station-1f-line-back",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "一樓生產線-後 →"
+      }
+    ]
+  },
+  {
+    "id": "station-1f-line-back",
+    "title": "一樓生產線-後",
+    "file": "station-1f-line-back.jpg",
+    "width": 10240,
+    "height": 5120,
+    "photo_count": 74,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-1f-line-back-prev",
+        "target": "station-1f-line-mid",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 一樓生產線-中"
+      },
+      {
+        "id": "link-station-1f-line-back-next",
+        "target": "station-1f-shipping",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "一樓出貨走道區 →"
+      }
+    ]
+  },
+  {
+    "id": "station-1f-shipping",
+    "title": "一樓出貨走道區",
+    "file": "station-1f-shipping.jpg",
+    "width": 10240,
+    "height": 5120,
+    "photo_count": 107,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-1f-shipping-prev",
+        "target": "station-1f-line-back",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 一樓生產線-後"
+      },
+      {
+        "id": "link-station-1f-shipping-next",
+        "target": "station-1f-paint",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "一樓噴塗區 →"
+      }
+    ]
+  },
+  {
+    "id": "station-1f-paint",
+    "title": "一樓噴塗區",
+    "file": "station-1f-paint.jpg",
+    "width": 8192,
+    "height": 4096,
+    "photo_count": 106,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-1f-paint-prev",
+        "target": "station-1f-shipping",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 一樓出貨走道區"
+      },
+      {
+        "id": "link-station-1f-paint-next",
+        "target": "station-1f-bonded",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "一樓保稅倉庫區 →"
+      }
+    ]
+  },
+  {
+    "id": "station-1f-bonded",
+    "title": "一樓保稅倉庫區",
+    "file": "station-1f-bonded.jpg",
+    "width": 8192,
+    "height": 4096,
+    "photo_count": 89,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-1f-bonded-prev",
+        "target": "station-1f-paint",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 一樓噴塗區"
+      },
+      {
+        "id": "link-station-1f-bonded-next",
+        "target": "station-2f-entrance",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "二樓門口 →"
+      }
+    ]
+  },
+  {
+    "id": "station-2f-entrance",
+    "title": "二樓門口",
+    "file": "station-2f-entrance.jpg",
+    "width": 8192,
+    "height": 4096,
+    "photo_count": 86,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-2f-entrance-prev",
+        "target": "station-1f-bonded",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 一樓保稅倉庫區"
+      },
+      {
+        "id": "link-station-2f-entrance-next",
+        "target": "station-2f-corridor",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "二樓走廊 →"
+      }
+    ]
+  },
+  {
+    "id": "station-2f-corridor",
+    "title": "二樓走廊",
+    "file": "station-2f-corridor.jpg",
+    "width": 8192,
+    "height": 4096,
+    "photo_count": 87,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-2f-corridor-prev",
+        "target": "station-2f-entrance",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 二樓門口"
+      },
+      {
+        "id": "link-station-2f-corridor-next",
+        "target": "station-2f-design",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "二樓設計課 →"
+      }
+    ]
+  },
+  {
+    "id": "station-2f-design",
+    "title": "二樓設計課",
+    "file": "station-2f-design.jpg",
+    "width": 8192,
+    "height": 4096,
+    "photo_count": 93,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-2f-design-prev",
+        "target": "station-2f-corridor",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 二樓走廊"
+      },
+      {
+        "id": "link-station-2f-design-next",
+        "target": "station-2f-sales",
+        "position": {
+          "yaw": "125deg",
+          "pitch": "-18deg"
+        },
+        "label": "二樓業務部 →"
+      }
+    ]
+  },
+  {
+    "id": "station-2f-sales",
+    "title": "二樓業務部",
+    "file": "station-2f-sales.jpg",
+    "width": 10240,
+    "height": 5120,
+    "photo_count": 118,
+    "default_yaw": "0deg",
+    "default_pitch": "-3deg",
+    "hfov_deg": 360,
+    "links": [
+      {
+        "id": "link-station-2f-sales-prev",
+        "target": "station-2f-design",
+        "position": {
+          "yaw": "-125deg",
+          "pitch": "-18deg"
+        },
+        "label": "← 二樓設計課"
+      }
+    ]
+  }
+]
