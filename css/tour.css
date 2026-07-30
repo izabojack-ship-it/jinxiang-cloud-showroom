@@ -729,95 +729,95 @@ html, body {
 /* ----- 桌機／筆電：字體與小圖放大（手機維持上方 max-width:720 設定） ----- */
 @media (min-width: 721px) {
   .f360-ui {
-    --f360-thumbs-h: 148px;
+    --f360-thumbs-h: 172px;
   }
 
   .f360-ui.is-thumbs-collapsed {
-    --f360-thumbs-h: 54px;
+    --f360-thumbs-h: 58px;
   }
 
   .f360-brand {
-    width: min(380px, calc(100vw - 36px));
-    padding: 18px 20px 16px;
+    width: min(420px, calc(100vw - 36px));
+    padding: 20px 22px 18px;
   }
 
-  .f360-brand__eyebrow { font-size: 0.78rem; }
-  .f360-brand__title { font-size: 1.42rem; }
-  .f360-brand__scene { font-size: 1.08rem; }
-  .f360-brand__floor { font-size: 0.82rem; }
-  .f360-progress__text { font-size: 0.84rem; }
+  .f360-brand__eyebrow { font-size: 0.88rem; }
+  .f360-brand__title { font-size: 1.62rem; }
+  .f360-brand__scene { font-size: 1.22rem; }
+  .f360-brand__floor { font-size: 0.92rem; }
+  .f360-progress__text { font-size: 0.94rem; }
 
   .f360-next-card {
-    width: min(280px, calc(100vw - 36px));
-    padding: 16px 16px 14px;
+    width: min(310px, calc(100vw - 36px));
+    padding: 18px 18px 16px;
   }
 
-  .f360-next-card__tag { font-size: 0.76rem; }
-  .f360-next-card__name { font-size: 1.28rem; }
-  .f360-next-card__hint { font-size: 0.84rem; }
+  .f360-next-card__tag { font-size: 0.86rem; }
+  .f360-next-card__name { font-size: 1.42rem; }
+  .f360-next-card__hint { font-size: 0.94rem; }
   .f360-next-card__btn {
-    padding: 11px 14px;
-    font-size: 0.95rem;
+    padding: 12px 16px;
+    font-size: 1.05rem;
   }
 
   .f360-route-controls {
-    width: min(860px, calc(100vw - 28px));
-    gap: 10px;
+    width: min(920px, calc(100vw - 28px));
+    gap: 12px;
   }
 
-  .f360-route-btn { padding: 14px 16px; gap: 10px; }
+  .f360-route-btn { padding: 16px 18px; gap: 12px; }
   .f360-route-btn__arrow {
-    width: 34px;
-    height: 34px;
-    font-size: 1.1rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
   }
-  .f360-route-btn__kicker { font-size: 0.76rem; }
-  .f360-route-btn__name { font-size: 1rem; }
+  .f360-route-btn__kicker { font-size: 0.86rem; }
+  .f360-route-btn__name { font-size: 1.12rem; }
   .f360-reset {
-    padding: 0 18px;
-    font-size: 0.88rem;
+    padding: 0 20px;
+    font-size: 0.98rem;
   }
 
   .f360-radar {
-    width: 104px;
-    padding: 10px 10px 8px;
+    width: 118px;
+    padding: 12px 12px 10px;
   }
 
-  .f360-radar__caption { font-size: 0.68rem; }
+  .f360-radar__caption { font-size: 0.76rem; }
 
   .f360-thumbs-toggle {
-    padding: 9px 18px;
-    font-size: 0.9rem;
-    gap: 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    gap: 12px;
   }
 
-  .f360-thumbs-toggle__meta { font-size: 0.82rem; }
+  .f360-thumbs-toggle__meta { font-size: 0.9rem; }
 
   .f360-thumbs {
-    gap: 12px;
-    padding: 14px 16px 12px;
-    max-height: 150px;
+    gap: 14px;
+    padding: 16px 18px 14px;
+    max-height: 175px;
   }
 
-  .f360-thumb { width: 120px; border-radius: 14px; }
+  .f360-thumb { width: 138px; border-radius: 14px; }
 
   .f360-thumb__badge {
-    min-width: 24px;
-    height: 24px;
-    font-size: 0.76rem;
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.86rem;
     top: 8px;
     left: 8px;
   }
 
   .f360-thumb__img {
-    height: 68px;
+    height: 78px;
     border-radius: 12px;
   }
 
-  .f360-thumb__name { font-size: 0.8rem; margin-top: 6px; }
-  .f360-thumb__floor { font-size: 0.68rem; }
+  .f360-thumb__name { font-size: 0.9rem; margin-top: 7px; }
+  .f360-thumb__floor { font-size: 0.76rem; }
 
-  .portal-marker__dir { font-size: 0.72rem; }
-  .portal-marker__name { font-size: 0.9rem; }
-  .portal-marker__chip { padding: 8px 12px; }
+  .portal-marker__dir { font-size: 0.82rem; }
+  .portal-marker__name { font-size: 1.02rem; }
+  .portal-marker__chip { padding: 10px 14px; }
 }
