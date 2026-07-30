@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.1/index.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5.14.1/index.css">
-  <link rel="stylesheet" href="./css/tour.css?v=51">
+  <link rel="stylesheet" href="./css/tour.css?v=52">
   <script type="importmap">
   {
     "imports": {
@@ -37,7 +37,12 @@
   <div id="f360-fade" class="f360-fade" aria-hidden="true"></div>
 
   <div class="f360-ui">
-    <header class="f360-brand">
+    <button id="f360-panels-toggle" type="button" class="f360-panels-toggle" aria-expanded="true" aria-controls="f360-brand f360-next-card">
+      <span class="f360-panels-toggle__chev" aria-hidden="true"></span>
+      <span id="f360-panels-toggle-label" class="f360-panels-toggle__label">收合資訊</span>
+    </button>
+
+    <header id="f360-brand" class="f360-brand">
       <p class="f360-brand__eyebrow">虛擬實境工廠導覽</p>
       <p class="f360-brand__title">金享車業雲端展間</p>
       <div class="f360-brand__meta">
@@ -98,6 +103,6 @@
     </div>
   </div>
 
-  <script type="module" src="./js/tour.js?v=51"></script>
+  <script type="module" src="./js/tour.js?v=52"></script>
 </body>
 </html>

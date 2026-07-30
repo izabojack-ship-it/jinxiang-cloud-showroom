@@ -6,10 +6,11 @@ import { Viewer, EquirectangularAdapter } from '@photo-sphere-viewer/core';
 import { MarkersPlugin } from '@photo-sphere-viewer/markers-plugin';
 import { AutorotatePlugin } from '@photo-sphere-viewer/autorotate-plugin';
 
-const MEDIA_VERSION = '51';
+const MEDIA_VERSION = '52';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
+const PANELS_COLLAPSE_KEY = 'f360-panels-collapsed';
 /** 閒置多久後開始自動旋轉（毫秒） */
 const AUTOROTATE_IDLE_MS = 2800;
 /** 慢速順時針（負值 = 順時針） */
@@ -34,7 +35,12 @@ const radarBeamEl = document.getElementById('f360-radar-beam');
 const thumbsEl = document.getElementById('f360-thumbs');
 const thumbsToggleBtn = document.getElementById('f360-thumbs-toggle');
 const thumbsToggleMetaEl = document.getElementById('f360-thumbs-toggle-meta');
+const panelsToggleBtn = document.getElementById('f360-panels-toggle');
+const panelsToggleLabelEl = document.getElementById('f360-panels-toggle-label');
 const resetBtn = document.getElementById('f360-reset');
+
+/** 橫式時是否已由系統自動收合過（避免覆寫使用者手動展開） */
+let landscapeAutoCollapsed = false;
 
 let viewer = null;
 let markersPlugin = null;
@@ -169,6 +175,8 @@ function updateRouteChrome() {
         : '您已走完整條建議動線，可從底部站點再探訪';
     }
   }
+
+  updatePanelsToggleLabel(!!uiEl?.classList.contains('is-panels-collapsed'));
 }
 
 function updateThumbnails() {
@@ -370,6 +378,10 @@ function mapStationRecord(record) {
   };
 }
 
+function isCompactLandscape() {
+  return window.matchMedia('(max-height: 480px), (max-width: 960px) and (orientation: landscape)').matches;
+}
+
 function setThumbsCollapsed(collapsed) {
   uiEl?.classList.toggle('is-thumbs-collapsed', collapsed);
   if (thumbsToggleBtn) {
@@ -379,6 +391,45 @@ function setThumbsCollapsed(collapsed) {
   try {
     localStorage.setItem(THUMBS_COLLAPSE_KEY, collapsed ? '1' : '0');
   } catch (_) { /* ignore */ }
+}
+
+function updatePanelsToggleLabel(collapsed) {
+  if (!panelsToggleLabelEl) return;
+  const scene = getScene(currentSceneId);
+  if (collapsed) {
+    panelsToggleLabelEl.textContent = scene?.title
+      ? `顯示資訊 · ${scene.title}`
+      : '顯示資訊';
+  } else {
+    panelsToggleLabelEl.textContent = '收合資訊';
+  }
+}
+
+function setPanelsCollapsed(collapsed, { persist = true } = {}) {
+  uiEl?.classList.toggle('is-panels-collapsed', collapsed);
+  if (panelsToggleBtn) {
+    panelsToggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    panelsToggleBtn.title = collapsed ? '顯示資訊面板' : '收合資訊面板';
+  }
+  updatePanelsToggleLabel(collapsed);
+  if (persist) {
+    try {
+      localStorage.setItem(PANELS_COLLAPSE_KEY, collapsed ? '1' : '0');
+    } catch (_) { /* ignore */ }
+  }
+}
+
+function syncLandscapePanels() {
+  if (isCompactLandscape()) {
+    if (!landscapeAutoCollapsed && !uiEl?.classList.contains('is-panels-collapsed')) {
+      setPanelsCollapsed(true, { persist: false });
+      setThumbsCollapsed(true);
+      landscapeAutoCollapsed = true;
+    }
+  } else {
+    landscapeAutoCollapsed = false;
+  }
+  updatePanelsToggleLabel(!!uiEl?.classList.contains('is-panels-collapsed'));
 }
 
 function bindThumbsToggle() {
@@ -394,11 +445,41 @@ function bindThumbsToggle() {
   });
 }
 
+function bindPanelsToggle() {
+  let collapsed = false;
+  try {
+    collapsed = localStorage.getItem(PANELS_COLLAPSE_KEY) === '1';
+  } catch (_) { /* ignore */ }
+
+  if (isCompactLandscape()) {
+    collapsed = true;
+    landscapeAutoCollapsed = true;
+    setThumbsCollapsed(true);
+  }
+  setPanelsCollapsed(collapsed, { persist: !isCompactLandscape() });
+
+  panelsToggleBtn?.addEventListener('click', () => {
+    const next = !uiEl?.classList.contains('is-panels-collapsed');
+    setPanelsCollapsed(next);
+    if (isCompactLandscape() && next) {
+      setThumbsCollapsed(true);
+    }
+  });
+
+  window.addEventListener('orientationchange', () => {
+    window.setTimeout(syncLandscapePanels, 120);
+  });
+  window.addEventListener('resize', () => {
+    window.setTimeout(syncLandscapePanels, 120);
+  });
+}
+
 function bindControls() {
   prevBtn?.addEventListener('click', () => goAdjacent(-1));
   nextBtn?.addEventListener('click', () => goAdjacent(1));
   gotoNextBtn?.addEventListener('click', () => goAdjacent(1));
   bindThumbsToggle();
+  bindPanelsToggle();
 
   resetBtn?.addEventListener('click', () => {
     const scene = getScene(currentSceneId);
