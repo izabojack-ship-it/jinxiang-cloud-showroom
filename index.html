@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.1/index.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5.14.1/index.css">
-  <link rel="stylesheet" href="./css/tour.css?v=52">
+  <link rel="stylesheet" href="./css/tour.css?v=57">
   <script type="importmap">
   {
     "imports": {
@@ -93,6 +93,89 @@
       <span class="f360-radar__caption">閒置自動旋轉 · 拖曳可暫停</span>
     </div>
 
+    <aside id="f360-guide" class="f360-guide" hidden aria-label="虛擬導覽員">
+      <div class="f360-guide__head">
+        <div class="f360-guide__persona">
+          <div class="f360-guide__avatar" data-guide-avatar aria-hidden="true">
+            <span class="f360-guide__avatar-ring"></span>
+            <div class="f360-guide__avatar-frame">
+              <img
+                class="f360-guide__avatar-img"
+                src="./media/guide/avatar.jpg?v=55"
+                alt=""
+                width="96"
+                height="96"
+                decoding="async"
+              >
+              <span class="f360-guide__avatar-shade"></span>
+              <span class="f360-guide__avatar-live"></span>
+            </div>
+            <span class="f360-guide__wave"></span>
+            <span class="f360-guide__wave f360-guide__wave--late"></span>
+          </div>
+          <div class="f360-guide__meta">
+            <p class="f360-guide__name" data-guide-name>金享導覽員</p>
+            <p class="f360-guide__role" data-guide-role>虛擬導覽</p>
+            <p class="f360-guide__status" data-guide-status>待命</p>
+          </div>
+        </div>
+        <button type="button" class="f360-guide__icon-btn" data-guide-close aria-label="收合導覽員">收合</button>
+      </div>
+      <div class="f360-guide__body">
+        <p class="f360-guide__title" data-guide-title></p>
+        <p class="f360-guide__text" data-guide-text></p>
+        <div class="f360-guide__poi" data-guide-poi-list hidden></div>
+      </div>
+      <div class="f360-guide__actions">
+        <button type="button" class="f360-guide__btn f360-guide__btn--primary" data-guide-play>播放語音</button>
+        <button type="button" class="f360-guide__btn" data-guide-stop>停止</button>
+        <button type="button" class="f360-guide__btn" data-guide-mute aria-pressed="false">靜音</button>
+      </div>
+    </aside>
+
+    <button id="f360-guide-open" type="button" class="f360-guide-open" aria-hidden="true">
+      <span class="f360-guide-open__dot" aria-hidden="true"></span>
+      開啟導覽員
+    </button>
+
+    <div id="f360-place-toast" class="f360-place-toast" role="status" aria-live="polite"></div>
+
+    <aside id="f360-place-panel" class="f360-place-panel" hidden aria-label="機台點位編輯">
+      <div class="f360-place-panel__head">
+        <div>
+          <p class="f360-place-panel__eyebrow">定位編輯（本機）</p>
+          <h2 class="f360-place-panel__title">機台點位設計</h2>
+        </div>
+        <a class="f360-place-panel__link" href="./editor.html" id="f360-place-editor-link">文案編輯</a>
+      </div>
+      <p class="f360-place-panel__hint">
+        先選機台，再點環景正確位置；座標會立刻寫入本機預覽。也可在此改標題與介紹。
+      </p>
+      <div id="f360-place-list" class="f360-place-list"></div>
+      <div id="f360-place-form" class="f360-place-form" hidden>
+        <label class="f360-place-field">
+          <span>標題</span>
+          <input type="text" id="f360-place-title" maxlength="60">
+        </label>
+        <label class="f360-place-field">
+          <span>介紹文案</span>
+          <textarea id="f360-place-body" rows="3"></textarea>
+        </label>
+        <div class="f360-place-coords">
+          <span>目前座標</span>
+          <code id="f360-place-coords">尚未定位</code>
+        </div>
+        <div class="f360-place-form__actions">
+          <button type="button" class="f360-place-btn f360-place-btn--primary" id="f360-place-save-text">儲存文案</button>
+          <button type="button" class="f360-place-btn" id="f360-place-focus">對準此點</button>
+        </div>
+      </div>
+      <div class="f360-place-panel__foot">
+        <button type="button" class="f360-place-btn" id="f360-place-add">新增機台點</button>
+        <button type="button" class="f360-place-btn" id="f360-place-exit">結束定位</button>
+      </div>
+    </aside>
+
     <div id="f360-thumbs-dock" class="f360-thumbs-dock">
       <button id="f360-thumbs-toggle" type="button" class="f360-thumbs-toggle" aria-expanded="true" aria-controls="f360-thumbs">
         <span class="f360-thumbs-toggle__label">展區動線</span>
@@ -103,6 +186,6 @@
     </div>
   </div>
 
-  <script type="module" src="./js/tour.js?v=52"></script>
+  <script type="module" src="./js/tour.js?v=57"></script>
 </body>
 </html>

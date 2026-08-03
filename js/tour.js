@@ -1,12 +1,20 @@
 /**
  * 金享車業雲端展間 · 360° 環景導覽
  * 動線導覽：明確上一站／下一站、進度與熱點標籤
+ * 虛擬導覽員：場景語音介紹＋機台單點（試作：一樓品保實驗室）
  */
 import { Viewer, EquirectangularAdapter } from '@photo-sphere-viewer/core';
 import { MarkersPlugin } from '@photo-sphere-viewer/markers-plugin';
 import { AutorotatePlugin } from '@photo-sphere-viewer/autorotate-plugin';
+import {
+  applyGuideOverrides,
+  buildPointMarkers,
+  createGuideController,
+  loadGuideOverrides,
+  writeSceneGuideOverride,
+} from './guide.js';
 
-const MEDIA_VERSION = '52';
+const MEDIA_VERSION = '57';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
@@ -38,6 +46,15 @@ const thumbsToggleMetaEl = document.getElementById('f360-thumbs-toggle-meta');
 const panelsToggleBtn = document.getElementById('f360-panels-toggle');
 const panelsToggleLabelEl = document.getElementById('f360-panels-toggle-label');
 const resetBtn = document.getElementById('f360-reset');
+const guideRootEl = document.getElementById('f360-guide');
+const placeToastEl = document.getElementById('f360-place-toast');
+const placePanelEl = document.getElementById('f360-place-panel');
+const placeListEl = document.getElementById('f360-place-list');
+const placeFormEl = document.getElementById('f360-place-form');
+const placeTitleEl = document.getElementById('f360-place-title');
+const placeBodyEl = document.getElementById('f360-place-body');
+const placeCoordsEl = document.getElementById('f360-place-coords');
+const placeEditorLinkEl = document.getElementById('f360-place-editor-link');
 
 /** 橫式時是否已由系統自動收合過（避免覆寫使用者手動展開） */
 let landscapeAutoCollapsed = false;
@@ -46,8 +63,12 @@ let viewer = null;
 let markersPlugin = null;
 let autorotatePlugin = null;
 let scenes = [];
+let scenesBase = [];
 let currentSceneId = null;
 let isTransitioning = false;
+let guide = null;
+let placeMode = false;
+let activePlacePointId = null;
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -111,7 +132,7 @@ function buildPortalMarkerHtml(link, direction) {
     </div>`;
 }
 
-function buildMarkersForScene(scene) {
+function buildPortalMarkers(scene) {
   return (scene.links || []).map((link) => {
     const direction = linkDirection(scene, link);
     return {
@@ -128,12 +149,20 @@ function buildMarkersForScene(scene) {
         trigger: 'hover',
       },
       data: {
+        kind: 'portal',
         targetSceneId: link.target,
         label: link.label,
         direction,
       },
     };
   });
+}
+
+function buildMarkersForScene(scene) {
+  return [
+    ...buildPortalMarkers(scene),
+    ...buildPointMarkers(scene),
+  ];
 }
 
 function syncRadar(yawRad) {
@@ -170,8 +199,11 @@ function updateRouteChrome() {
     nextCardEl.classList.toggle('is-done', !next);
     const hint = nextCardEl.querySelector('.f360-next-card__hint');
     if (hint) {
+      const hasPoints = (scene.points || []).length > 0;
       hint.textContent = next
-        ? '旋轉畫面，點擊金色熱點或下方按鈕前往'
+        ? (hasPoints
+          ? '點擊藍色熱點聽機台介紹，金色熱點可前往下一站'
+          : '旋轉畫面，點擊金色熱點或下方按鈕前往')
         : '您已走完整條建議動線，可從底部站點再探訪';
     }
   }
@@ -220,9 +252,272 @@ function applySceneMarkers(sceneId) {
   markersPlugin.setMarkers(buildMarkersForScene(scene));
 }
 
+/** 只更新單一機台點位置，避免整批重建造成閃爍／震動 */
+function updatePointMarker(point) {
+  if (!markersPlugin || !point?.id || !point.position) return false;
+  try {
+    if (!markersPlugin.getMarker(point.id)) return false;
+    markersPlugin.updateMarker({
+      id: point.id,
+      position: point.position,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function findLinkTo(targetId) {
   const scene = getScene(currentSceneId);
   return (scene?.links || []).find((l) => l.target === targetId) || null;
+}
+
+function radToDeg(rad) {
+  return (rad * 180) / Math.PI;
+}
+
+function formatDeg(value) {
+  return `${Math.round(value * 10) / 10}deg`;
+}
+
+function showPlaceToast(message) {
+  if (!placeToastEl) {
+    console.info('[定位]', message);
+    return;
+  }
+  placeToastEl.textContent = message;
+  placeToastEl.classList.add('is-visible');
+  window.clearTimeout(showPlaceToast._timer);
+  showPlaceToast._timer = window.setTimeout(() => {
+    placeToastEl.classList.remove('is-visible');
+  }, 4200);
+}
+
+function getActivePlacePoint() {
+  const scene = getScene(currentSceneId);
+  return (scene?.points || []).find((p) => p.id === activePlacePointId) || null;
+}
+
+function formatPointCoords(point) {
+  if (!point?.position) return '尚未定位';
+  return `yaw ${point.position.yaw} · pitch ${point.position.pitch}`;
+}
+
+function persistCurrentSceneGuide() {
+  const scene = getScene(currentSceneId);
+  const base = scenesBase.find((r) => r.id === currentSceneId) || null;
+  if (!scene) return;
+  writeSceneGuideOverride(currentSceneId, {
+    guide: scene.guide || base?.guide || null,
+    points: scene.points || [],
+  }, base);
+}
+
+function selectPlacePoint(pointId, { focus = false } = {}) {
+  activePlacePointId = pointId || null;
+  renderPlacePanel();
+  const point = getActivePlacePoint();
+  if (focus && point) focusPoint(point);
+}
+
+function renderPlacePanel() {
+  if (!placeMode || !placePanelEl) return;
+  const scene = getScene(currentSceneId);
+  const points = scene?.points || [];
+
+  if (placeEditorLinkEl) {
+    placeEditorLinkEl.href = `./editor.html?scene=${encodeURIComponent(currentSceneId || '')}`;
+  }
+
+  if (!points.length) {
+    if (placeListEl) {
+      placeListEl.innerHTML = '<p class="f360-place-panel__hint" style="margin:0">尚無機台點，請先按「新增機台點」。</p>';
+    }
+    if (placeFormEl) placeFormEl.hidden = true;
+    return;
+  }
+
+  if (!activePlacePointId || !points.some((p) => p.id === activePlacePointId)) {
+    activePlacePointId = points[0].id;
+  }
+
+  if (placeListEl) {
+    placeListEl.innerHTML = points.map((point, index) => `
+      <button
+        type="button"
+        class="f360-place-item${point.id === activePlacePointId ? ' is-active' : ''}"
+        data-place-point="${point.id}"
+      >
+        <span class="f360-place-item__num">${index + 1}</span>
+        <span class="f360-place-item__name">${escapeHtml(point.title || `機台 ${index + 1}`)}</span>
+        <span class="f360-place-item__pos">${escapeHtml(point.position?.yaw || '—')}</span>
+      </button>`).join('');
+  }
+
+  const point = getActivePlacePoint();
+  if (placeFormEl) placeFormEl.hidden = !point;
+  if (point) {
+    if (placeTitleEl && document.activeElement !== placeTitleEl) {
+      placeTitleEl.value = point.title || '';
+    }
+    if (placeBodyEl && document.activeElement !== placeBodyEl) {
+      placeBodyEl.value = point.body || '';
+    }
+    if (placeCoordsEl) placeCoordsEl.textContent = formatPointCoords(point);
+  }
+}
+
+function saveActivePlaceText() {
+  const scene = getScene(currentSceneId);
+  const point = getActivePlacePoint();
+  if (!scene || !point) return;
+  point.title = placeTitleEl?.value.trim() || point.title;
+  point.body = placeBodyEl?.value.trim() || '';
+  persistCurrentSceneGuide();
+  applySceneMarkers(currentSceneId);
+  renderPlacePanel();
+  showPlaceToast(`已儲存文案：${point.title}`);
+}
+
+function placePointAt(yaw, pitch) {
+  const scene = getScene(currentSceneId);
+  if (!scene) return;
+
+  if (!activePlacePointId) {
+    const n = (scene.points || []).length + 1;
+    const created = {
+      id: `poi-${currentSceneId}-${Date.now().toString(36)}`,
+      title: `新機台 ${n}`,
+      body: '',
+      position: { yaw, pitch },
+    };
+    scene.points = [...(scene.points || []), created];
+    activePlacePointId = created.id;
+  } else {
+    const point = getActivePlacePoint();
+    if (!point) return;
+    point.position = { yaw, pitch };
+  }
+
+  persistCurrentSceneGuide();
+
+  const point = getActivePlacePoint();
+  if (!point || !updatePointMarker(point)) {
+    applySceneMarkers(currentSceneId);
+  }
+  renderPlacePanel();
+
+  showPlaceToast(`已定位「${point?.title || '機台'}」→ ${yaw}, ${pitch}`);
+  try {
+    navigator.clipboard?.writeText(`"position": { "yaw": "${yaw}", "pitch": "${pitch}" }`);
+  } catch { /* ignore */ }
+}
+
+function addPlacePoint() {
+  const scene = getScene(currentSceneId);
+  if (!scene) return;
+  const n = (scene.points || []).length + 1;
+  const created = {
+    id: `poi-${currentSceneId}-${Date.now().toString(36)}`,
+    title: `新機台 ${n}`,
+    body: '',
+    position: { yaw: '0deg', pitch: '-10deg' },
+  };
+  scene.points = [...(scene.points || []), created];
+  activePlacePointId = created.id;
+  persistCurrentSceneGuide();
+  applySceneMarkers(currentSceneId);
+  renderPlacePanel();
+  showPlaceToast(`已新增「${created.title}」，請點環景放置位置`);
+}
+
+function setPlaceMode(on, { pointId = null, toast = true } = {}) {
+  placeMode = !!on;
+  document.body.classList.toggle('is-place-mode', placeMode);
+
+  if (placePanelEl) placePanelEl.hidden = !placeMode;
+
+  if (placeMode) {
+    autorotatePlugin?.stop();
+    if (pointId) activePlacePointId = pointId;
+    renderPlacePanel();
+    if (toast) {
+      showPlaceToast(activePlacePointId
+        ? '定位模式：點擊環景即可更新目前選取的機台位置'
+        : '定位模式：先選機台，再點環景放置');
+    }
+  } else if (toast) {
+    showPlaceToast('已結束定位模式');
+  }
+}
+
+function bindPlacePanel() {
+  placeListEl?.addEventListener('click', (event) => {
+    const btn = event.target.closest('[data-place-point]');
+    if (!btn) return;
+    selectPlacePoint(btn.dataset.placePoint, { focus: true });
+  });
+
+  document.getElementById('f360-place-save-text')?.addEventListener('click', () => {
+    saveActivePlaceText();
+  });
+
+  document.getElementById('f360-place-focus')?.addEventListener('click', () => {
+    const point = getActivePlacePoint();
+    if (point) focusPoint(point);
+  });
+
+  document.getElementById('f360-place-add')?.addEventListener('click', () => {
+    addPlacePoint();
+  });
+
+  document.getElementById('f360-place-exit')?.addEventListener('click', () => {
+    setPlaceMode(false);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('place');
+    url.searchParams.delete('point');
+    window.history.replaceState({}, '', url);
+  });
+}
+
+function escapeHtml(str = '') {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+async function focusPoint(point) {
+  if (!viewer || !point?.position) return;
+  autorotatePlugin?.stop();
+  try {
+    if (markersPlugin) {
+      await markersPlugin.gotoMarker(point.id, '6rpm');
+    } else {
+      await viewer.animate({
+        yaw: point.position.yaw,
+        pitch: point.position.pitch,
+        speed: '6rpm',
+      });
+    }
+  } catch (err) {
+    console.warn('[雲端展間] 對準機台失敗', err);
+  }
+}
+
+function activateGuideForScene(scene, { isEnter = false } = {}) {
+  if (!guide) return;
+  if (!scene?.guide?.enabled) {
+    guide.hidePanel();
+    return;
+  }
+
+  const firstVisit = isEnter && !guide.hasSeenIntro(scene.id);
+  guide.presentSceneIntro(scene, {
+    autoPlay: firstVisit || (isEnter && scene.guide.autoPlayIntro !== false),
+  });
+  if (isEnter) guide.markIntroSeen(scene.id);
 }
 
 async function switchScene(targetId, options = {}) {
@@ -233,6 +528,7 @@ async function switchScene(targetId, options = {}) {
 
   isTransitioning = true;
   autorotatePlugin?.stop();
+  guide?.stopSpeech();
 
   try {
     if (options.viaMarkerId && markersPlugin) {
@@ -259,6 +555,12 @@ async function switchScene(targetId, options = {}) {
     updateThumbnails();
     updateRouteChrome();
     autorotatePlugin?.setOption('autorotatePitch', target.defaultPitch);
+    activateGuideForScene(target, { isEnter: true });
+    if (placeMode) {
+      activePlacePointId = null;
+      renderPlacePanel();
+      autorotatePlugin?.stop();
+    }
 
     fadeEl?.classList.remove('is-out');
     fadeEl?.classList.add('is-in');
@@ -281,8 +583,20 @@ function goAdjacent(delta) {
   switchScene(target.id, { viaMarkerId: link?.id });
 }
 
-function initViewer() {
-  const first = scenes[0];
+function initGuide() {
+  guide = createGuideController({
+    rootEl: guideRootEl,
+    getScene: () => getScene(currentSceneId),
+    getViewer: () => viewer,
+    getMarkersPlugin: () => markersPlugin,
+    onFocusPoint: (point) => {
+      focusPoint(point);
+    },
+  });
+}
+
+function initViewer(startScene) {
+  const first = startScene || scenes[0];
   if (!first) return;
 
   if (loaderSubEl) loaderSubEl.textContent = `正在載入 ${first.title}…`;
@@ -331,15 +645,43 @@ function initViewer() {
   autorotatePlugin = viewer.getPlugin(AutorotatePlugin);
   currentSceneId = first.id;
   window.__psv = viewer;
+  window.__f360 = {
+    getScene: () => getScene(currentSceneId),
+    switchScene,
+    setPlaceMode: (on, opts) => setPlaceMode(on, opts),
+  };
 
   viewer.addEventListener('position-updated', ({ position }) => {
     syncRadar(position.yaw);
   });
 
   markersPlugin.addEventListener('select-marker', ({ marker }) => {
+    const kind = marker?.data?.kind;
+    if (kind === 'info') {
+      const scene = getScene(currentSceneId);
+      const point = (scene?.points || []).find((p) => p.id === marker.data.pointId);
+      if (!point) return;
+      if (placeMode) {
+        selectPlacePoint(point.id, { focus: true });
+        showPlaceToast(`已選取「${point.title}」，點環景可更新位置`);
+        return;
+      }
+      guide?.unlockAudio();
+      guide?.presentPoint(point, scene);
+      return;
+    }
+    if (placeMode) return;
     const targetId = marker?.data?.targetSceneId;
     if (!targetId) return;
     switchScene(targetId, { viaMarkerId: marker.id });
+  });
+
+  viewer.addEventListener('click', ({ data }) => {
+    if (!placeMode || !data) return;
+    const yaw = formatDeg(radToDeg(data.yaw));
+    const pitch = formatDeg(radToDeg(data.pitch));
+    placePointAt(yaw, pitch);
+    window.__f360.lastPlace = { yaw, pitch, pointId: activePlacePointId };
   });
 
   viewer.addEventListener('ready', () => {
@@ -347,14 +689,16 @@ function initViewer() {
     syncRadar(viewer.getPosition().yaw);
     updateRouteChrome();
     updateThumbnails();
-    // 進場後若無操作，自動慢速順時針展示
+    activateGuideForScene(first, { isEnter: true });
     autorotatePlugin?.start();
   }, { once: true });
 
   // 預載下一站即可，避免一次塞 15 張
-  if (scenes[1]) {
+  const idx = scenes.findIndex((s) => s.id === first.id);
+  const preload = scenes[idx + 1] || scenes[1];
+  if (preload && preload.id !== first.id) {
     const img = new Image();
-    img.src = scenes[1].panorama;
+    img.src = preload.panorama;
   }
 }
 
@@ -375,6 +719,8 @@ function mapStationRecord(record) {
     defaultPitch: record.default_pitch || '-5deg',
     defaultZoom: Number.isFinite(record.default_zoom) ? record.default_zoom : DEFAULT_ZOOM,
     links: record.links || [],
+    guide: record.guide || null,
+    points: Array.isArray(record.points) ? record.points : [],
   };
 }
 
@@ -475,9 +821,18 @@ function bindPanelsToggle() {
 }
 
 function bindControls() {
-  prevBtn?.addEventListener('click', () => goAdjacent(-1));
-  nextBtn?.addEventListener('click', () => goAdjacent(1));
-  gotoNextBtn?.addEventListener('click', () => goAdjacent(1));
+  prevBtn?.addEventListener('click', () => {
+    guide?.unlockAudio();
+    goAdjacent(-1);
+  });
+  nextBtn?.addEventListener('click', () => {
+    guide?.unlockAudio();
+    goAdjacent(1);
+  });
+  gotoNextBtn?.addEventListener('click', () => {
+    guide?.unlockAudio();
+    goAdjacent(1);
+  });
   bindThumbsToggle();
   bindPanelsToggle();
 
@@ -492,6 +847,17 @@ function bindControls() {
       speed: '4rpm',
     });
   });
+
+  // 首次互動後解鎖自動語音（瀏覽器自動播放政策）
+  const unlockOnce = () => guide?.unlockAudio();
+  document.addEventListener('pointerdown', unlockOnce, { once: true, passive: true });
+}
+
+function resolveStartScene() {
+  const params = new URLSearchParams(window.location.search);
+  const sceneId = params.get('scene');
+  if (sceneId && getScene(sceneId)) return getScene(sceneId);
+  return scenes[0];
 }
 
 async function bootstrap() {
@@ -501,13 +867,32 @@ async function bootstrap() {
     const records = await res.json();
     if (!records.length) throw new Error('尚無站點資料');
 
-    scenes = records.map(mapStationRecord);
+    scenesBase = records.map((r) => structuredClone(r));
+    let merged = records;
+    const overrides = loadGuideOverrides();
+    if (overrides) {
+      merged = applyGuideOverrides(records, overrides);
+      console.info('[雲端展間] 已套用本機文案／點位覆寫（localStorage）');
+    }
+
+    scenes = merged.map(mapStationRecord);
     if (thumbsToggleMetaEl) {
       thumbsToggleMetaEl.textContent = `${scenes.length} 站`;
     }
+
+    const params = new URLSearchParams(window.location.search);
+    const startPlace = params.get('place') === '1';
+    const startPoint = params.get('point');
+
+    initGuide();
+    bindPlacePanel();
     buildThumbnailMenu();
     bindControls();
-    initViewer();
+    initViewer(resolveStartScene());
+
+    if (startPlace) {
+      setPlaceMode(true, { pointId: startPoint, toast: true });
+    }
   } catch (err) {
     console.error('[雲端展間]', err);
     if (loaderSubEl) loaderSubEl.textContent = err.message || '載入失敗';
