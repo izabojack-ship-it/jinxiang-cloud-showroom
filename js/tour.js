@@ -14,7 +14,7 @@ import {
   writeSceneGuideOverride,
 } from './guide.js';
 
-const MEDIA_VERSION = '57';
+const MEDIA_VERSION = '58';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
