@@ -133,13 +133,13 @@
           "yaw": "125deg",
           "pitch": "-18deg"
         },
-        "label": "一樓研發模具室 →"
+        "label": "雷射/貼標生產線 →"
       }
     ]
   },
   {
     "id": "station-1f-mold",
-    "title": "一樓研發模具室",
+    "title": "雷射/貼標生產線",
     "file": "station-1f-mold.jpg",
     "width": 10240,
     "height": 5120,
@@ -186,7 +186,7 @@
           "yaw": "-125deg",
           "pitch": "-18deg"
         },
-        "label": "← 一樓研發模具室"
+        "label": "← 雷射/貼標生產線"
       },
       {
         "id": "link-station-1f-hallway-next",
