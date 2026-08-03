@@ -4,7 +4,12 @@
 
 ## 公開網址
 
-https://izabojack-ship-it.github.io/jinxiang-cloud-showroom/
+主網址：https://izabojack-ship-it.github.io/jinxiang-cloud-showroom/
+
+若主網址無法開啟（部分網路環境會擋 github.io），可改用備用網址：
+
+- https://cdn.jsdelivr.net/gh/izabojack-ship-it/jinxiang-cloud-showroom@main/index.html
+- https://rawcdn.githack.com/izabojack-ship-it/jinxiang-cloud-showroom/main/index.html
 
 ## 導覽順序
 
@@ -34,3 +39,11 @@ python -m http.server 7979
 ```
 
 開啟 http://localhost:7979
+
+### 虛擬導覽員（試作：一樓品保實驗室）
+
+- 展間：http://localhost:7979/index.html?scene=station-1f-qa-lab  
+- 文案／點位編輯：http://localhost:7979/editor.html  
+- 定位模式：http://localhost:7979/index.html?scene=station-1f-qa-lab&place=1  
+
+建議流程：在編輯頁改文案 → 對機台按「定位此點」→ 在環景點正確位置（座標即時寫回本機）→ 確認後下載覆蓋 `media/stations.json`。語音使用瀏覽器 Web Speech（建議 Chrome）；尚未部署上線。
