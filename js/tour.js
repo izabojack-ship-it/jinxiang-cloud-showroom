@@ -6,15 +6,15 @@
 import { Viewer, EquirectangularAdapter } from '@photo-sphere-viewer/core';
 import { MarkersPlugin } from '@photo-sphere-viewer/markers-plugin';
 import { AutorotatePlugin } from '@photo-sphere-viewer/autorotate-plugin';
-import {
-  applyGuideOverrides,
-  buildPointMarkers,
-  createGuideController,
-  loadGuideOverrides,
-  writeSceneGuideOverride,
-} from './guide.js';
+/** 虛擬導覽員模組僅存在於本機開發環境；線上版沒有此檔案時自動停用相關功能 */
+let guideApi = null;
+try {
+  guideApi = await import('./guide.js');
+} catch {
+  guideApi = null;
+}
 
-const MEDIA_VERSION = '61';
+const MEDIA_VERSION = '62';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
@@ -161,7 +161,7 @@ function buildPortalMarkers(scene) {
 function buildMarkersForScene(scene) {
   return [
     ...buildPortalMarkers(scene),
-    ...buildPointMarkers(scene),
+    ...(guideApi ? guideApi.buildPointMarkers(scene) : []),
   ];
 }
 
@@ -306,8 +306,8 @@ function formatPointCoords(point) {
 function persistCurrentSceneGuide() {
   const scene = getScene(currentSceneId);
   const base = scenesBase.find((r) => r.id === currentSceneId) || null;
-  if (!scene) return;
-  writeSceneGuideOverride(currentSceneId, {
+  if (!scene || !guideApi) return;
+  guideApi.writeSceneGuideOverride(currentSceneId, {
     guide: scene.guide || base?.guide || null,
     points: scene.points || [],
   }, base);
@@ -584,7 +584,8 @@ function goAdjacent(delta) {
 }
 
 function initGuide() {
-  guide = createGuideController({
+  if (!guideApi) return;
+  guide = guideApi.createGuideController({
     rootEl: guideRootEl,
     getScene: () => getScene(currentSceneId),
     getViewer: () => viewer,
@@ -869,9 +870,9 @@ async function bootstrap() {
 
     scenesBase = records.map((r) => structuredClone(r));
     let merged = records;
-    const overrides = loadGuideOverrides();
+    const overrides = guideApi ? guideApi.loadGuideOverrides() : null;
     if (overrides) {
-      merged = applyGuideOverrides(records, overrides);
+      merged = guideApi.applyGuideOverrides(records, overrides);
       console.info('[雲端展間] 已套用本機文案／點位覆寫（localStorage）');
     }
 
