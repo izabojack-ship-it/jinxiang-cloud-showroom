@@ -102,13 +102,13 @@
           "yaw": "125deg",
           "pitch": "-18deg"
         },
-        "label": "一樓量測區 →"
+        "label": "模治具室 →"
       }
     ]
   },
   {
     "id": "station-1f-measure",
-    "title": "一樓量測區",
+    "title": "模治具室",
     "file": "station-1f-measure.jpg",
     "width": 10240,
     "height": 5120,
@@ -155,7 +155,7 @@
           "yaw": "-125deg",
           "pitch": "-18deg"
         },
-        "label": "← 一樓量測區"
+        "label": "← 模治具室"
       },
       {
         "id": "link-station-1f-mold-next",
@@ -288,13 +288,13 @@
           "yaw": "125deg",
           "pitch": "-18deg"
         },
-        "label": "一樓出貨走道區 →"
+        "label": "CNC加工區 →"
       }
     ]
   },
   {
     "id": "station-1f-shipping",
-    "title": "一樓出貨走道區",
+    "title": "CNC加工區",
     "file": "station-1f-shipping.jpg",
     "width": 10240,
     "height": 5120,
@@ -319,13 +319,13 @@
           "yaw": "125deg",
           "pitch": "-18deg"
         },
-        "label": "一樓噴塗區 →"
+        "label": "噴砂區 →"
       }
     ]
   },
   {
     "id": "station-1f-paint",
-    "title": "一樓噴塗區",
+    "title": "噴砂區",
     "file": "station-1f-paint.jpg",
     "width": 8192,
     "height": 4096,
@@ -341,7 +341,7 @@
           "yaw": "-125deg",
           "pitch": "-18deg"
         },
-        "label": "← 一樓出貨走道區"
+        "label": "← CNC加工區"
       },
       {
         "id": "link-station-1f-paint-next",
@@ -350,13 +350,13 @@
           "yaw": "125deg",
           "pitch": "-18deg"
         },
-        "label": "一樓保稅倉庫區 →"
+        "label": "倉庫區 →"
       }
     ]
   },
   {
     "id": "station-1f-bonded",
-    "title": "一樓保稅倉庫區",
+    "title": "倉庫區",
     "file": "station-1f-bonded.jpg",
     "width": 8192,
     "height": 4096,
@@ -372,7 +372,7 @@
           "yaw": "-125deg",
           "pitch": "-18deg"
         },
-        "label": "← 一樓噴塗區"
+        "label": "← 噴砂區"
       },
       {
         "id": "link-station-1f-bonded-next",
@@ -403,7 +403,7 @@
           "yaw": "-125deg",
           "pitch": "-18deg"
         },
-        "label": "← 一樓保稅倉庫區"
+        "label": "← 倉庫區"
       },
       {
         "id": "link-station-2f-entrance-next",
