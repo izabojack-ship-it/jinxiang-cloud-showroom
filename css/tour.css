@@ -1253,6 +1253,68 @@ body.is-place-mode .info-marker__ripple {
   to { opacity: 0.55; transform: scaleX(1.05) scaleY(1.15); }
 }
 
+/* 下顎說話層：與底圖同步的複本，僅裁出嘴部/下巴區域，說話時微幅位移 */
+.f360-guide__jaw {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  clip-path: ellipse(21% 13% at 49% 58%);
+  transform: translateY(0);
+  transition: transform 0.08s ease-out;
+  pointer-events: none;
+}
+
+.f360-guide__avatar.is-tick .f360-guide__jaw {
+  transform: translateY(calc(2.4px * var(--jaw, 1))) scaleY(1.05);
+}
+
+/* 說話節奏的頭部微動（覆蓋原本較慢的 transition） */
+.f360-guide__avatar.is-tick .f360-guide__avatar-frame {
+  transition: transform 0.09s ease-out;
+  transform: translateY(calc(0.7px * var(--jaw, 1))) rotate(calc(-0.6deg * var(--jaw, 1)));
+}
+
+/* 語音等化條 */
+.f360-guide__eq {
+  display: none;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 12px;
+  margin-top: 4px;
+}
+
+.f360-guide.is-speaking .f360-guide__eq { display: inline-flex; }
+
+.f360-guide__eq i {
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #8fd8f5, rgba(212, 160, 23, 0.9));
+  animation: f360-guide-eq 0.9s ease-in-out infinite;
+  transform-origin: bottom;
+  height: 100%;
+}
+
+.f360-guide__eq i:nth-child(1) { animation-delay: 0s; }
+.f360-guide__eq i:nth-child(2) { animation-delay: 0.18s; }
+.f360-guide__eq i:nth-child(3) { animation-delay: 0.36s; }
+.f360-guide__eq i:nth-child(4) { animation-delay: 0.1s; }
+.f360-guide__eq i:nth-child(5) { animation-delay: 0.27s; }
+
+@keyframes f360-guide-eq {
+  0%, 100% { transform: scaleY(0.25); }
+  35% { transform: scaleY(1); }
+  70% { transform: scaleY(0.5); }
+}
+
+/* 逐字字幕：唸到的字轉為金色 */
+.f360-guide__ch {
+  transition: color 0.12s ease;
+}
+
+.f360-guide__ch.is-said {
+  color: #ffd166;
+}
+
 .f360-guide__meta { min-width: 0; }
 
 .f360-guide__name {
