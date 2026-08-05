@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.1/index.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5.14.1/index.css">
-  <link rel="stylesheet" href="./css/tour.css?v=77">
+  <link rel="stylesheet" href="./css/tour.css?v=78">
   <script type="importmap">
   {
     "imports": {
@@ -94,51 +94,35 @@
     </div>
 
     <aside id="f360-guide" class="f360-guide" hidden aria-label="虛擬導覽員">
-      <div class="f360-guide__head">
-        <div class="f360-guide__persona">
-          <div class="f360-guide__avatar" data-guide-avatar aria-hidden="true">
-            <span class="f360-guide__avatar-ring"></span>
-            <div class="f360-guide__avatar-frame">
-              <img
-                class="f360-guide__avatar-img"
-                src="./media/guide/avatar.jpg?v=55"
-                alt=""
-                width="96"
-                height="96"
-                decoding="async"
-              >
-              <span class="f360-guide__jaw" aria-hidden="true">
-                <img
-                  class="f360-guide__avatar-img"
-                  src="./media/guide/avatar.jpg?v=55"
-                  alt=""
-                  decoding="async"
-                >
-              </span>
-              <span class="f360-guide__avatar-shade"></span>
-              <span class="f360-guide__avatar-live"></span>
-            </div>
-            <span class="f360-guide__wave"></span>
-            <span class="f360-guide__wave f360-guide__wave--late"></span>
-          </div>
-          <div class="f360-guide__meta">
-            <p class="f360-guide__name" data-guide-name>金享導覽員</p>
-            <p class="f360-guide__role" data-guide-role>虛擬導覽</p>
-            <p class="f360-guide__status" data-guide-status>待命</p>
-            <span class="f360-guide__eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-          </div>
+      <div class="f360-presenter" data-guide-avatar aria-hidden="true">
+        <img
+          class="f360-presenter__img"
+          src="./media/guide/presenter_closed.png"
+          alt=""
+          decoding="async"
+        >
+        <img
+          class="f360-presenter__img f360-presenter__img--open"
+          src="./media/guide/presenter_open.png"
+          alt=""
+          decoding="async"
+        >
+        <div class="f360-presenter__plate">
+          <p class="f360-presenter__name" data-guide-name>金享導覽員</p>
+          <p class="f360-presenter__status" data-guide-status>待命</p>
+          <span class="f360-guide__eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
         </div>
-        <button type="button" class="f360-guide__icon-btn" data-guide-close aria-label="收合導覽員">收合</button>
       </div>
-      <div class="f360-guide__body">
-        <p class="f360-guide__title" data-guide-title></p>
-        <p class="f360-guide__text" data-guide-text></p>
-        <div class="f360-guide__poi" data-guide-poi-list hidden></div>
-      </div>
-      <div class="f360-guide__actions">
-        <button type="button" class="f360-guide__btn f360-guide__btn--primary" data-guide-play>播放語音</button>
-        <button type="button" class="f360-guide__btn" data-guide-stop>停止</button>
-        <button type="button" class="f360-guide__btn" data-guide-mute aria-pressed="false">靜音</button>
+      <div class="f360-subtitle">
+        <p class="f360-subtitle__title" data-guide-title></p>
+        <p class="f360-subtitle__text" data-guide-text></p>
+        <div class="f360-subtitle__poi" data-guide-poi-list hidden></div>
+        <div class="f360-subtitle__actions">
+          <button type="button" class="f360-guide__btn f360-guide__btn--primary" data-guide-play>播放語音</button>
+          <button type="button" class="f360-guide__btn" data-guide-stop>停止</button>
+          <button type="button" class="f360-guide__btn" data-guide-mute aria-pressed="false">靜音</button>
+          <button type="button" class="f360-guide__btn" data-guide-close>收起導覽員</button>
+        </div>
       </div>
     </aside>
 
@@ -195,6 +179,6 @@
     </div>
   </div>
 
-  <script type="module" src="./js/tour.js?v=77"></script>
+  <script type="module" src="./js/tour.js?v=78"></script>
 </body>
 </html>
