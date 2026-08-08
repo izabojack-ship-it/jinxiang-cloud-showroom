@@ -946,12 +946,13 @@ html, body {
   .portal-marker__name { font-size: 1.02rem; }
   .portal-marker__chip { padding: 10px 14px; }
 
-  .f360-guide {
-    width: min(420px, calc(100vw - 36px));
+  .f360-subtitle {
+    width: min(720px, calc(100vw - 460px));
   }
 
-  .f360-guide__title { font-size: 1.2rem; }
-  .f360-guide__text { font-size: 1rem; }
+  .f360-subtitle__title { font-size: 0.95rem; }
+  .f360-subtitle__text { font-size: 1.08rem; }
+  .f360-presenter { height: min(58vh, 570px); }
   .info-marker__dir, .info-marker__tag { font-size: 0.82rem; }
   .info-marker__name { font-size: 1.02rem; }
 }
@@ -1068,20 +1069,13 @@ body.is-place-mode .info-marker__ripple {
 }
 
 /* ----- 虛擬導覽員面板 ----- */
+/* 導覽員：真人立繪直接站在畫面上（無卡片框），字幕置中下方 */
 .f360-guide {
   position: absolute;
-  left: max(14px, env(safe-area-inset-left));
-  bottom: calc(var(--f360-thumbs-h) + 72px + var(--f360-safe));
-  width: min(360px, calc(100vw - 28px));
-  padding: 14px;
-  border-radius: var(--f360-radius);
-  background:
-    linear-gradient(155deg, rgba(28, 48, 64, 0.92), rgba(10, 14, 20, 0.88));
-  border: 1px solid rgba(90, 196, 232, 0.35);
-  backdrop-filter: blur(18px);
-  box-shadow: var(--f360-shadow);
-  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease, bottom 0.28s ease;
+  inset: 0;
+  pointer-events: none;
   z-index: 4;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .f360-guide[hidden],
@@ -1089,7 +1083,127 @@ body.is-place-mode .info-marker__ripple {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateY(10px);
+}
+
+.f360-presenter {
+  position: absolute;
+  right: max(2px, env(safe-area-inset-right));
+  bottom: calc(var(--f360-thumbs-h) + var(--f360-safe) - 4px);
+  height: min(52vh, 490px);
+  aspect-ratio: 2 / 3;
+  pointer-events: none;
+  filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.5));
+  transform-origin: bottom center;
+  animation: f360-presenter-in 0.55s ease-out backwards, f360-presenter-sway 7s ease-in-out 0.55s infinite;
+  transition: bottom 0.28s ease;
+}
+
+.f360-presenter__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+/* 嘴型開合：依實際語音音量（--amp 0~1）交叉淡化到張嘴幀 */
+.f360-presenter__img--open {
+  opacity: clamp(0, calc((var(--amp, 0) - 0.07) * 3.4), 1);
+}
+
+.f360-presenter__plate {
+  position: absolute;
+  left: -4%;
+  bottom: 12%;
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: var(--f360-glass-strong);
+  border: 1px solid rgba(212, 160, 23, 0.4);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--f360-shadow);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.f360-presenter__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.f360-presenter__status {
+  margin: 1px 0 0;
+  font-size: 0.66rem;
+  color: var(--f360-muted);
+}
+
+.f360-guide.is-speaking .f360-presenter__status {
+  color: #8fd8f5;
+}
+
+@keyframes f360-presenter-in {
+  from { opacity: 0; transform: translateX(48px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes f360-presenter-sway {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(0.5deg); }
+}
+
+.f360-subtitle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--f360-thumbs-h) + 16px + var(--f360-safe));
+  width: min(620px, calc(100vw - 330px));
+  pointer-events: auto;
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  text-align: center;
+  padding: 12px 18px 10px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(6, 10, 16, 0.14), rgba(6, 10, 16, 0.58));
+  backdrop-filter: blur(8px);
+  transition: bottom 0.28s ease;
+}
+
+.f360-subtitle:not(:has(.f360-guide__ch)) {
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.f360-subtitle__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--f360-accent-bright);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+
+.f360-subtitle__text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #f4f7fa;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.85);
+  max-height: 6.8em;
+  overflow: auto;
+}
+
+.f360-subtitle__poi { pointer-events: auto; }
+
+.f360-subtitle__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 .f360-guide__head {
@@ -1436,8 +1550,9 @@ body.is-place-mode .info-marker__ripple {
 
 .f360-guide-open {
   position: absolute;
-  left: max(14px, env(safe-area-inset-left));
-  bottom: calc(var(--f360-thumbs-h) + 72px + var(--f360-safe));
+  left: auto;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: calc(var(--f360-thumbs-h) + 12px + var(--f360-safe));
   display: none;
   align-items: center;
   gap: 8px;
@@ -1716,45 +1831,56 @@ body.is-place-mode .f360-guide-open {
 }
 
 @media (max-width: 720px) {
-  .f360-guide,
   .f360-guide-open {
     bottom: calc(var(--f360-thumbs-h) + 64px + var(--f360-safe));
-  }
-
-  .f360-guide {
-    width: min(100vw - 20px, 360px);
     left: 50%;
+    right: auto;
     transform: translateX(-50%);
   }
 
-  .f360-guide.is-collapsed {
-    transform: translateX(-50%) translateY(10px);
+  .f360-presenter {
+    height: min(32vh, 280px);
+    right: 0;
   }
 
-  .f360-guide-open {
-    left: 50%;
-    transform: translateX(-50%);
+  .f360-presenter__plate {
+    left: auto;
+    right: 4%;
+    bottom: 4%;
+    padding: 5px 9px;
+  }
+
+  .f360-subtitle {
+    width: calc(100vw - 20px);
+    bottom: calc(var(--f360-thumbs-h) + 10px + var(--f360-safe));
+    padding: 9px 10px 8px;
+  }
+
+  .f360-subtitle__text {
+    font-size: 0.82rem;
+    max-height: 4.8em;
   }
 }
 
 @media (max-height: 480px), (max-width: 960px) and (orientation: landscape) {
-  .f360-guide {
-    width: min(300px, 42vw);
-    bottom: calc(var(--f360-thumbs-h) + 10px + var(--f360-safe));
-    padding: 10px;
+  .f360-presenter {
+    height: min(52vh, 220px);
   }
 
-  .f360-guide__avatar {
-    width: 56px;
-    height: 56px;
+  .f360-presenter__plate { display: none; }
+
+  .f360-subtitle {
+    width: min(46vw, 430px);
+    bottom: calc(var(--f360-thumbs-h) + 8px + var(--f360-safe));
+    padding: 8px 10px 6px;
   }
 
-  .f360-guide__text {
-    max-height: 4.6em;
+  .f360-subtitle__text {
+    max-height: 3.4em;
     font-size: 0.74rem;
   }
 
-  .f360-guide__poi { display: none; }
+  .f360-subtitle__poi { display: none; }
 
   .f360-guide-open {
     bottom: calc(var(--f360-thumbs-h) + 10px + var(--f360-safe));

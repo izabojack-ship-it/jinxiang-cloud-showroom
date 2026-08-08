@@ -9,12 +9,13 @@ import { AutorotatePlugin } from '@photo-sphere-viewer/autorotate-plugin';
 /** 虛擬導覽員模組僅存在於本機開發環境；線上版沒有此檔案時自動停用相關功能 */
 let guideApi = null;
 try {
-  guideApi = await import('./guide.js');
+  // 本機開發用：加時間戳避免瀏覽器快取到舊版導覽員程式
+  guideApi = await import(`./guide.js?t=${Date.now()}`);
 } catch {
   guideApi = null;
 }
 
-const MEDIA_VERSION = '78';
+const MEDIA_VERSION = '79';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';

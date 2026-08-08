@@ -17,9 +17,10 @@ Thumbs.db
 .vscode/
 .idea/
 
-# 虛擬導覽員（試作，僅本機）
-js/guide.js
-media/guide/
+# 文案編輯器（僅本機）
 editor.html
 css/editor.css
 js/editor.js
+
+# 導覽員素材：舊版備份不上線
+media/guide/*_v1.png
