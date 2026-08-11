@@ -279,7 +279,7 @@ export function createGuideController({
         .f360-gv__plate { display: none; }
       }
       /* 手機橫向：導覽員縮小貼右下角，避免遮住環景 */
-      @media (max-height: 480px), (max-width: 960px) and (orientation: landscape) {
+      @media (max-height: 540px), (max-width: 960px) and (orientation: landscape) {
         .f360-gmode {
           bottom: calc(var(--f360-thumbs-h) + var(--f360-safe) + min(38vh, 150px) + 8px);
         }

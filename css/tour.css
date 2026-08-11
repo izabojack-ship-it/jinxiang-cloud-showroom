@@ -794,7 +794,7 @@ html, body {
 }
 
 /* 手機／平板橫式：預設留給畫面，資訊可收合；收合時連動線列也變精簡 */
-@media (max-height: 480px), (max-width: 960px) and (orientation: landscape) {
+@media (max-height: 540px), (max-width: 960px) and (orientation: landscape) {
   .f360-panels-toggle {
     display: inline-flex;
     font-size: 0.74rem;
@@ -1862,7 +1862,7 @@ body.is-place-mode .f360-guide-open {
   }
 }
 
-@media (max-height: 480px), (max-width: 960px) and (orientation: landscape) {
+@media (max-height: 540px), (max-width: 960px) and (orientation: landscape) {
   .f360-presenter {
     height: min(38vh, 150px);
     filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
@@ -1870,18 +1870,33 @@ body.is-place-mode .f360-guide-open {
 
   .f360-presenter__plate { display: none; }
 
+  /* 橫向：字幕改成細條式，不擋畫面 */
   .f360-subtitle {
-    width: min(44vw, 390px);
-    bottom: calc(var(--f360-thumbs-h) + 8px + var(--f360-safe));
-    padding: 8px 10px 6px;
+    width: min(58vw, 460px);
+    bottom: calc(var(--f360-thumbs-h) + 6px + var(--f360-safe));
+    padding: 5px 10px 5px;
+    gap: 4px;
   }
 
+  .f360-subtitle__title { display: none; }
+
   .f360-subtitle__text {
-    max-height: 3.4em;
-    font-size: 0.74rem;
+    max-height: 2.9em;
+    font-size: 0.72rem;
+    line-height: 1.45;
   }
 
   .f360-subtitle__poi { display: none; }
+
+  .f360-subtitle__actions { gap: 5px; }
+
+  .f360-subtitle .f360-guide__btn {
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 4px 9px;
+    border-radius: 8px;
+    font-size: 0.64rem;
+  }
 
   .f360-guide-open {
     bottom: calc(var(--f360-thumbs-h) + 10px + var(--f360-safe));
