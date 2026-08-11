@@ -1864,13 +1864,14 @@ body.is-place-mode .f360-guide-open {
 
 @media (max-height: 480px), (max-width: 960px) and (orientation: landscape) {
   .f360-presenter {
-    height: min(52vh, 220px);
+    height: min(38vh, 150px);
+    filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
   }
 
   .f360-presenter__plate { display: none; }
 
   .f360-subtitle {
-    width: min(46vw, 430px);
+    width: min(44vw, 390px);
     bottom: calc(var(--f360-thumbs-h) + 8px + var(--f360-safe));
     padding: 8px 10px 6px;
   }

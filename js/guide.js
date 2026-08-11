@@ -278,6 +278,21 @@ export function createGuideController({
         .f360-guide[data-guide-mode="cutout"] .f360-gv video { height: min(36vh, 320px); }
         .f360-gv__plate { display: none; }
       }
+      /* 手機橫向：導覽員縮小貼右下角，避免遮住環景 */
+      @media (max-height: 480px), (max-width: 960px) and (orientation: landscape) {
+        .f360-gmode {
+          bottom: calc(var(--f360-thumbs-h) + var(--f360-safe) + min(38vh, 150px) + 8px);
+        }
+        .f360-gmode__toggle { padding: 6px 9px; font-size: 0.66rem; }
+        .f360-guide.is-fmt-window .f360-gv video,
+        .f360-guide[data-guide-mode="window"] .f360-gv video { height: min(36vh, 140px); }
+        .f360-guide.is-fmt-cutout .f360-gv video,
+        .f360-guide[data-guide-mode="cutout"] .f360-gv video {
+          height: min(40vh, 155px);
+          filter: drop-shadow(0 8px 14px rgba(0,0,0,0.45));
+        }
+        .f360-gv__plate { display: none; }
+      }
     `;
     document.head.appendChild(style);
   }
