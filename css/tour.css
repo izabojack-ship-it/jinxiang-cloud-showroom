@@ -1609,6 +1609,52 @@ body.is-place-mode .info-marker__ripple {
   transform: translate(-50%, 0) scale(1);
 }
 
+/* ----- 專注導覽模式：只留導覽員人物，其餘介面與熱點全部隱藏 ----- */
+body.is-guide-solo .f360-panels-toggle,
+body.is-guide-solo .f360-brand,
+body.is-guide-solo .f360-next-card,
+body.is-guide-solo .f360-route-controls,
+body.is-guide-solo .f360-radar,
+body.is-guide-solo .f360-thumbs-dock,
+body.is-guide-solo .f360-guide-open,
+body.is-guide-solo .f360-subtitle,
+body.is-guide-solo .f360-gmode,
+body.is-guide-solo .psv-markers {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* 縮圖列隱藏後，導覽員貼齊畫面底部 */
+body.is-guide-solo .f360-ui {
+  --f360-thumbs-h: 0px;
+}
+
+.f360-solo-exit {
+  position: fixed;
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 40;
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(10, 14, 20, 0.62);
+  backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.88);
+  font: inherit;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+.f360-solo-exit:hover {
+  border-color: rgba(212, 160, 23, 0.6);
+  color: #ffd869;
+}
+
+.f360-solo-exit[hidden] { display: none !important; }
+
 body.is-place-mode {
   cursor: crosshair;
 }

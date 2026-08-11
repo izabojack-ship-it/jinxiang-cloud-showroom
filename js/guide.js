@@ -110,11 +110,14 @@ export function createGuideController({
     playBtn: rootEl?.querySelector('[data-guide-play]'),
     stopBtn: rootEl?.querySelector('[data-guide-stop]'),
     muteBtn: rootEl?.querySelector('[data-guide-mute]'),
+    soloBtn: rootEl?.querySelector('[data-guide-solo]'),
     closeBtn: rootEl?.querySelector('[data-guide-close]'),
     openBtn: document.getElementById('f360-guide-open'),
     poiList: rootEl?.querySelector('[data-guide-poi-list]'),
   };
 
+  let solo = false;
+  let soloExitBtn = null;
   let muted = false;
   try {
     muted = localStorage.getItem(GUIDE_MUTE_KEY) === '1';
@@ -577,11 +580,19 @@ export function createGuideController({
 
   function setCollapsed(next) {
     collapsed = next;
+    if (next) setSolo(false);
     els.root?.classList.toggle('is-collapsed', next);
     els.openBtn?.classList.toggle('is-visible', next);
     if (els.openBtn) {
       els.openBtn.setAttribute('aria-hidden', next ? 'false' : 'true');
     }
+  }
+
+  /** 專注導覽：隱藏所有介面與熱點，只留導覽員人物 */
+  function setSolo(next) {
+    solo = next;
+    document.body.classList.toggle('is-guide-solo', next);
+    if (soloExitBtn) soloExitBtn.hidden = !next;
   }
 
   function setSpeaking(next) {
@@ -726,6 +737,7 @@ export function createGuideController({
   function hidePanel() {
     if (!els.root) return;
     els.root.hidden = true;
+    setSolo(false);
     stopSpeech();
     activePointId = null;
   }
@@ -813,7 +825,17 @@ export function createGuideController({
     });
     els.stopBtn?.addEventListener('click', () => stopSpeech());
     els.muteBtn?.addEventListener('click', () => setMuted(!muted));
+    els.soloBtn?.addEventListener('click', () => setSolo(true));
     els.closeBtn?.addEventListener('click', () => setCollapsed(true));
+
+    // 專注模式的退出鈕：掛在 body 上，不受介面隱藏規則影響
+    soloExitBtn = document.createElement('button');
+    soloExitBtn.type = 'button';
+    soloExitBtn.className = 'f360-solo-exit';
+    soloExitBtn.textContent = '結束專注導覽';
+    soloExitBtn.hidden = true;
+    soloExitBtn.addEventListener('click', () => setSolo(false));
+    document.body.appendChild(soloExitBtn);
     els.openBtn?.addEventListener('click', () => {
       showPanel();
       setCollapsed(false);
