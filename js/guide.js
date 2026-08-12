@@ -6,8 +6,41 @@
 export const GUIDE_OVERRIDE_KEY = 'f360-guide-overrides';
 const GUIDE_MUTE_KEY = 'f360-guide-muted';
 const GUIDE_MODE_KEY = 'f360-guide-mode'; // avatar=動畫立牌 window=影片視窗 cutout=去背真人
+const GUIDE_LANG_KEY = 'f360-guide-lang'; // zh | en
 const GUIDE_SEEN_INTRO_KEY = 'f360-guide-seen-intro';
 const GUIDE_CHANNEL = 'f360-guide-overrides';
+
+/** 公司介紹（點進網址的開場旁白），中英文對照 */
+export const COMPANY_INTRO = {
+  zh: {
+    title: '金享車業 Kalloy · 公司介紹',
+    text: '台灣金享 Kalloy 創立於 1980 年，位列全球前三大自行車輕量化零配件專業製造商。'
+      + '公司專注研發製作車把、豎管、座管、座管束等自行車核心配件，產品覆蓋全車型，'
+      + '適配各類騎行場景，遠銷歐美、澳洲等全球主流市場。'
+      + '企業掌握鋁合金鍛造、碳纖維複合成型兩大核心工藝，採 OEM、ODM、OBM 三位一體營運模式，'
+      + '旗下自有國際品牌 UNO。透過台灣、中國、越南三地全球化產能布局，可彈性調配產能，穩定供應全球訂單。'
+      + '完整產線涵蓋模具開發製造、CNC 精密切削、噴砂表面處理、LOGO 刻印成型一貫化作業，'
+      + '一站式完成零配件加工與品牌標識定製。金享堅持 ESG 永續經營理念，嚴控產品品質並提供完善配套服務，'
+      + '長年為國際一線車企提供高規格、定製化自行車零配件整體解決方案。',
+  },
+  en: {
+    title: 'Kalloy · Company Introduction',
+    text: 'Founded in 1980, Kalloy Taiwan is among the world\'s top three professional manufacturers '
+      + 'of lightweight bicycle components. We specialize in the R&D and production of core parts '
+      + 'including handlebars, stems, seat posts and seat clamps, with products compatible with all '
+      + 'bike types and diverse riding scenarios, sold to major global markets across Europe, America, '
+      + 'Australia and beyond. '
+      + 'We master core technologies of aluminum alloy forging and carbon fiber composite molding, '
+      + 'and operate an integrated business model covering OEM, ODM and OBM, owning our international '
+      + 'proprietary brand UNO. With global production bases deployed in Taiwan, mainland China and '
+      + 'Vietnam, we deliver highly flexible and stable worldwide supply. '
+      + 'Our full production line integrates mold manufacturing, CNC precision machining, sandblasting '
+      + 'surface finishing and logo marking, realizing one-stop processing and customized brand marking '
+      + 'for components. Adhering to ESG sustainable development principles and professional quality '
+      + 'services, we have long provided high-end, customized bicycle component solutions for '
+      + 'international brands.',
+  },
+};
 
 function broadcastGuideOverrides(overrides) {
   try {
@@ -164,8 +197,18 @@ export function createGuideController({
   let usingVideo = false;
   let videoToken = 0;
   let modeButtons = [];
+
+  /** 語言（公司介紹中英切換） */
+  let lang = 'zh';
+  try {
+    if (localStorage.getItem(GUIDE_LANG_KEY) === 'en') lang = 'en';
+  } catch { /* ignore */ }
+  let langBtn = null;
+  let companyMode = false; // 目前字幕內容是否為公司介紹
+  let companyIntroPending = false; // 等待首次手勢後自動開講
   let currentSpeakKey = null;
   let currentSpeakText = '';
+  let currentSpeakLang = 'zh';
 
   /** 影片播放看門狗：卡住超過 3 秒即改用語音接續，避免整段當掉 */
   let videoWatchdog = 0;
@@ -201,14 +244,15 @@ export function createGuideController({
     const at = videoEl?.currentTime || 0;
     const key = currentSpeakKey;
     const text = currentSpeakText;
+    const spokenLang = currentSpeakLang;
     freezeOrHideVideo();
     if (key) {
       playRecorded(key, at).catch(() => {
         usingAudio = false;
-        if (text) speakTts(text);
+        if (text) speakTts(text, spokenLang);
       });
     } else if (text) {
-      speakTts(text);
+      speakTts(text, spokenLang);
     }
   }
 
@@ -229,6 +273,7 @@ export function createGuideController({
           bottom: calc(var(--f360-thumbs-h) + var(--f360-safe) + min(34vh, 300px) + 8px);
         }
       }
+      .f360-gmode__row { display: flex; gap: 6px; justify-content: flex-end; }
       .f360-gmode__toggle {
         padding: 8px 10px; border-radius: 999px; cursor: pointer;
         border: 1px solid rgba(255,255,255,0.22); background: rgba(10,14,20,0.72);
@@ -236,6 +281,7 @@ export function createGuideController({
         font-size: 0.72rem; letter-spacing: 0.04em; white-space: nowrap;
         box-shadow: 0 8px 22px rgba(0,0,0,0.35);
       }
+      [data-glang-switch] { font-weight: 700; color: #ffd869; border-color: rgba(212,160,23,0.5); }
       .f360-gmode__opts {
         display: flex; flex-direction: column; align-items: stretch; gap: 5px;
       }
@@ -629,9 +675,14 @@ export function createGuideController({
     else if (!speaking && els.status) els.status.textContent = '待命';
   }
 
-  function pickVoice() {
+  function pickVoice(prefLang = 'zh') {
     if (!speechSupported) return null;
     const voices = window.speechSynthesis.getVoices();
+    if (prefLang === 'en') {
+      return voices.find((v) => /en(-|_)?US/i.test(v.lang))
+        || voices.find((v) => /^en/i.test(v.lang))
+        || null;
+    }
     const prefer = voices.find((v) => /zh(-|_)?TW/i.test(v.lang))
       || voices.find((v) => /zh(-|_)?HK/i.test(v.lang))
       || voices.find((v) => /zh/i.test(v.lang));
@@ -647,7 +698,7 @@ export function createGuideController({
     setSpeechProgress(0);
   }
 
-  function speak(text, { force = false, key = null } = {}) {
+  function speak(text, { force = false, key = null, lang: speakLang = 'zh' } = {}) {
     if (!text?.trim()) return;
     if (muted && !force) return;
 
@@ -655,6 +706,7 @@ export function createGuideController({
     stopSpeech();
     currentSpeakKey = key;
     currentSpeakText = text;
+    currentSpeakLang = speakLang;
 
     // 真人影片模式：有對應影片就播影片；缺檔時真人定格＋語音，維持畫面穩定
     if (mode !== 'avatar' && key) {
@@ -663,7 +715,7 @@ export function createGuideController({
         freezeOrHideVideo();
         playRecorded(key).catch(() => {
           usingAudio = false;
-          speakTts(text);
+          speakTts(text, speakLang);
         });
       });
       return;
@@ -673,14 +725,14 @@ export function createGuideController({
     if (key) {
       playRecorded(key).catch(() => {
         usingAudio = false;
-        speakTts(text);
+        speakTts(text, speakLang);
       });
       return;
     }
-    speakTts(text);
+    speakTts(text, speakLang);
   }
 
-  function speakTts(text) {
+  function speakTts(text, ttsLang = 'zh') {
     if (!speechSupported) {
       if (els.status) els.status.textContent = '此瀏覽器不支援語音';
       return;
@@ -689,10 +741,10 @@ export function createGuideController({
     stopVideo();
     stopRecorded();
     const utter = new SpeechSynthesisUtterance(text.trim());
-    utter.lang = 'zh-TW';
+    utter.lang = ttsLang === 'en' ? 'en-US' : 'zh-TW';
     utter.rate = 1.02;
     utter.pitch = 1;
-    const voice = pickVoice();
+    const voice = pickVoice(ttsLang);
     if (voice) utter.voice = voice;
 
     currentUtterLen = utter.text.length;
@@ -769,12 +821,52 @@ export function createGuideController({
     renderPoiList(scene);
   }
 
+  /** 公司介紹：點進網址的開場旁白，支援中英切換 */
+  function presentCompanyIntro({ autoPlay = true } = {}) {
+    showPanel();
+    companyMode = true;
+    activePointId = null;
+    const c = COMPANY_INTRO[lang] || COMPANY_INTRO.zh;
+    if (els.title) els.title.textContent = c.title;
+    renderSpeakableText(c.text);
+    renderPoiList(getScene?.());
+    if (!autoPlay || muted) return;
+    if (unlockedAudio) {
+      speak(c.text, { key: `company__intro_${lang}`, lang });
+    } else {
+      // 瀏覽器自動播放限制：等首次觸控／點擊後開講
+      companyIntroPending = true;
+    }
+  }
+
+  function setLang(next) {
+    const val = next === 'en' ? 'en' : 'zh';
+    if (val === lang) return;
+    lang = val;
+    try { localStorage.setItem(GUIDE_LANG_KEY, lang); } catch { /* ignore */ }
+    updateLangBtn();
+    if (companyMode) {
+      const resume = speaking || usingVideo || companyIntroPending;
+      companyIntroPending = false;
+      stopSpeech();
+      presentCompanyIntro({ autoPlay: resume });
+    }
+  }
+
+  function updateLangBtn() {
+    if (!langBtn) return;
+    langBtn.textContent = lang === 'zh' ? 'EN' : '中文';
+    langBtn.title = lang === 'zh' ? 'Switch to English' : '切換為中文';
+  }
+
   function presentSceneIntro(scene, { autoPlay = false } = {}) {
     const guide = scene?.guide;
     if (!guide?.enabled) {
       hidePanel();
       return;
     }
+    companyMode = false;
+    companyIntroPending = false;
 
     showPanel();
     if (els.name) els.name.textContent = guide.name || '虛擬導覽員';
@@ -796,6 +888,8 @@ export function createGuideController({
 
   function presentPoint(point, scene) {
     if (!point) return;
+    companyMode = false;
+    companyIntroPending = false;
     showPanel();
     setScript({
       title: point.title,
@@ -808,6 +902,11 @@ export function createGuideController({
   }
 
   function replayCurrent() {
+    if (companyMode) {
+      const c = COMPANY_INTRO[lang] || COMPANY_INTRO.zh;
+      speak(c.text, { force: true, key: `company__intro_${lang}`, lang });
+      return;
+    }
     const title = els.title?.textContent || '';
     const text = els.text?.textContent || '';
     if (!text) return;
@@ -858,13 +957,21 @@ export function createGuideController({
       wrap.setAttribute('role', 'group');
       wrap.setAttribute('aria-label', '導覽員樣式');
       wrap.innerHTML = `
-        <button type="button" class="f360-gmode__toggle" data-gmode-toggle>導覽員樣式</button>
+        <div class="f360-gmode__row">
+          <button type="button" class="f360-gmode__toggle" data-glang-switch>EN</button>
+          <button type="button" class="f360-gmode__toggle" data-gmode-toggle>導覽員樣式</button>
+        </div>
         <div class="f360-gmode__opts">
           <button type="button" data-gmode="avatar">虛擬人</button>
           <button type="button" data-gmode="cutout">真人</button>
         </div>`;
       els.root.appendChild(wrap);
       wrap.addEventListener('click', (event) => {
+        if (event.target.closest('[data-glang-switch]')) {
+          unlockedAudio = true;
+          setLang(lang === 'zh' ? 'en' : 'zh');
+          return;
+        }
         if (event.target.closest('[data-gmode-toggle]')) {
           wrap.classList.toggle('is-collapsed');
           return;
@@ -879,7 +986,19 @@ export function createGuideController({
         replayCurrent();
       });
       modeButtons = [...wrap.querySelectorAll('[data-gmode]')];
+      langBtn = wrap.querySelector('[data-glang-switch]');
+      updateLangBtn();
     }
+
+    // 首次觸控／點擊後，若公司介紹還在等待自動播放，立即開講
+    document.addEventListener('pointerdown', () => {
+      unlockedAudio = true;
+      if (companyIntroPending && companyMode && !muted && !speaking) {
+        companyIntroPending = false;
+        const c = COMPANY_INTRO[lang] || COMPANY_INTRO.zh;
+        speak(c.text, { key: `company__intro_${lang}`, lang });
+      }
+    }, { once: true, passive: true });
     applyMode(mode);
 
     // 預熱 voices
@@ -897,6 +1016,12 @@ export function createGuideController({
 
   return {
     presentSceneIntro,
+    presentCompanyIntro,
+    /** 換站時同步機台點選清單（不自動講解） */
+    syncScene(scene) {
+      if (els.root?.hidden) return;
+      renderPoiList(scene);
+    },
     presentPoint,
     stopSpeech,
     hidePanel,

@@ -15,7 +15,7 @@ try {
   guideApi = null;
 }
 
-const MEDIA_VERSION = '82';
+const MEDIA_VERSION = '83';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
@@ -507,18 +507,14 @@ async function focusPoint(point) {
   }
 }
 
-function activateGuideForScene(scene, { isEnter = false } = {}) {
+function activateGuideForScene(scene, { initial = false } = {}) {
   if (!guide) return;
-  if (!scene?.guide?.enabled) {
-    guide.hidePanel();
+  // 公司介紹只在點進網址時播一次；各展間不再自動講解，僅同步機台點選清單
+  if (initial) {
+    guide.presentCompanyIntro?.();
     return;
   }
-
-  const firstVisit = isEnter && !guide.hasSeenIntro(scene.id);
-  guide.presentSceneIntro(scene, {
-    autoPlay: firstVisit || (isEnter && scene.guide.autoPlayIntro !== false),
-  });
-  if (isEnter) guide.markIntroSeen(scene.id);
+  guide.syncScene?.(scene);
 }
 
 async function switchScene(targetId, options = {}) {
@@ -556,7 +552,7 @@ async function switchScene(targetId, options = {}) {
     updateThumbnails();
     updateRouteChrome();
     autorotatePlugin?.setOption('autorotatePitch', target.defaultPitch);
-    activateGuideForScene(target, { isEnter: true });
+    activateGuideForScene(target);
     if (placeMode) {
       activePlacePointId = null;
       renderPlacePanel();
@@ -691,7 +687,7 @@ function initViewer(startScene) {
     syncRadar(viewer.getPosition().yaw);
     updateRouteChrome();
     updateThumbnails();
-    activateGuideForScene(first, { isEnter: true });
+    activateGuideForScene(first, { initial: true });
     autorotatePlugin?.start();
   }, { once: true });
 
