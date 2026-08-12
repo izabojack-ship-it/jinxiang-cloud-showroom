@@ -15,7 +15,7 @@ try {
   guideApi = null;
 }
 
-const MEDIA_VERSION = '84';
+const MEDIA_VERSION = '85';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
@@ -514,14 +514,14 @@ function activateGuideForScene(scene, { initial = false } = {}) {
     guide.presentCompanyIntro?.();
     return;
   }
-  // 只有設定導覽文案的重點展站會自動講解，其餘僅同步機台點選清單
+  // 只有設定導覽文案的重點展站會出現導覽員並講解，其餘展間整個隱藏
   if (scene?.guide?.enabled && scene.guide.intro) {
     guide.presentSceneIntro(scene, {
       autoPlay: scene.guide.autoPlayIntro !== false,
     });
     return;
   }
-  guide.syncScene?.(scene);
+  guide.hidePanel();
 }
 
 async function switchScene(targetId, options = {}) {

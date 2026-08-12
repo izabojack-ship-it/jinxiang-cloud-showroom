@@ -792,6 +792,9 @@ export function createGuideController({
     setSolo(false);
     stopSpeech();
     activePointId = null;
+    // 無導覽的展間連「開啟導覽員」鈕也不顯示
+    els.openBtn?.classList.remove('is-visible');
+    els.openBtn?.setAttribute('aria-hidden', 'true');
   }
 
   function renderPoiList(scene) {
