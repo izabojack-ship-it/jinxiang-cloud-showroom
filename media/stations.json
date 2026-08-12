@@ -147,6 +147,14 @@
     "default_yaw": "0deg",
     "default_pitch": "-3deg",
     "hfov_deg": 360,
+    "guide": {
+      "enabled": true,
+      "name": "金享導覽員",
+      "role": "虛擬導覽",
+      "autoPlayIntro": true,
+      "intro": "歡迎來到 LOGO 雷射與貼標生產線。本產線整合雷射打標與貼標作業，用於零件 LOGO、型號、序號標示，配置於組裝後段，適用自行車五金。核心模組包含工作台、雷射打標機、貼標輔助治具與檢驗工位。工藝流程為：工件人工上料，人工定位擺放，雷射刻印 LOGO 或人工貼上 LOGO 標籤，再由人工檢測標示位置與清晰度，NG 品分離後出料。兩種工藝可單獨或搭配使用。",
+      "introEn": "Welcome to the LOGO laser and labeling production line. This line integrates laser marking and labeling operations for marking part logos, model numbers and serial numbers. Deployed at the post-assembly stage, it is suitable for mass production of bicycle metal hardware. Core modules include the worktable, laser marker, labeling auxiliary fixtures and an inspection station. The process flow: manual loading of workpieces, manual positioning and placement, laser-engraved logo or manual logo label application, manual inspection of marking position and clarity, separation of non-conforming products, and discharge. The two processes can be operated independently or in combination."
+    },
     "links": [
       {
         "id": "link-station-1f-mold-prev",
@@ -333,6 +341,14 @@
     "default_yaw": "0deg",
     "default_pitch": "-3deg",
     "hfov_deg": 360,
+    "guide": {
+      "enabled": true,
+      "name": "金享導覽員",
+      "role": "虛擬導覽",
+      "autoPlayIntro": true,
+      "intro": "這裡是噴砂區。噴砂為工件表面處理工序，配置於加工後、塗裝與陽極處理前，適用自行車五金金屬零配件。核心模組包含噴砂機、砂材儲存回收系統、除塵設備與作業工作台。工藝流程為：工件人工上料，擺放定位，噴砂介質衝擊工件表面，去除毛邊、氧化皮與油污，形成均勻霧面粗化，清理粉塵後工件下料。可調整砂材粒度與氣壓，改變表面粗糙度，提升後續陽極、烤漆附著力，滿足外觀及後續製程要求。",
+      "introEn": "This is the sandblasting area. Sandblasting is a workpiece surface-treatment process, performed after machining and prior to painting and anodizing, and applies to metal hardware components for bicycles. Core modules include the sandblasting machine, abrasive storage and recycling system, dust-removal equipment and worktable. The process flow: manual workpiece loading, positioning and placement, abrasive media impinges on the workpiece surface to remove burrs, scale and oil contamination for uniform matte surface roughening, followed by dust cleaning and workpiece unloading. Abrasive grain size and air pressure are adjustable to modify surface roughness, improving adhesion for subsequent anodizing and painting to satisfy appearance and downstream process requirements."
+    },
     "links": [
       {
         "id": "link-station-1f-paint-prev",
@@ -457,6 +473,14 @@
     "default_yaw": "0deg",
     "default_pitch": "-3deg",
     "hfov_deg": 360,
+    "guide": {
+      "enabled": true,
+      "name": "金享導覽員",
+      "role": "虛擬導覽",
+      "autoPlayIntro": true,
+      "intro": "歡迎來到研發部門。研發部為公司核心技術單位，專責新產品開發、既有產品改良、新技術研究以及客戶專用品客製化研發。依市場需求與客戶訂製需求，執行產品設計、原型測試與技術驗證，落實產品量產落地與技術專利布局，同時協助生產、業務部門解決各類技術問題，打造差異化、客製化產品優勢，全面提升企業市場競爭力。",
+      "introEn": "Welcome to the R&D Department. The R&D Department is the company's core technical unit, responsible for new product development, existing product optimization, new technology research, and customized development for customer-specific products. In accordance with market demands and customer customization requirements, it conducts product design, prototype testing and technical verification to realize product mass production and patent layout. It provides professional technical support for production and sales teams, creates differentiated and customized product advantages, and strengthens the company's overall market competitiveness."
+    },
     "links": [
       {
         "id": "link-station-2f-design-prev",

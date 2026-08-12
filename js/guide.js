@@ -850,6 +850,15 @@ export function createGuideController({
       companyIntroPending = false;
       stopSpeech();
       presentCompanyIntro({ autoPlay: resume });
+      return;
+    }
+    // 場景介紹顯示中且有雙語文案：立即以新語言重新呈現
+    const scene = getScene?.();
+    if (!activePointId && scene?.guide?.enabled && scene.guide.introEn
+      && els.root && !els.root.hidden) {
+      const resume = speaking || usingVideo;
+      stopSpeech();
+      presentSceneIntro(scene, { autoPlay: resume });
     }
   }
 
@@ -873,16 +882,20 @@ export function createGuideController({
     if (els.role) els.role.textContent = guide.role || '虛擬導覽';
     if (videoPlate) videoPlate.textContent = guide.name || '虛擬導覽員';
 
+    // 有英文文案時依目前語言切換；沒有則一律用中文
+    const useEn = lang === 'en' && guide.introEn;
+    const introText = (useEn ? guide.introEn : guide.intro) || '';
     setScript({
-      title: `${scene.title} · 場景介紹`,
-      text: guide.intro || '',
+      title: useEn ? `${scene.title} · Introduction` : `${scene.title} · 場景介紹`,
+      text: introText,
       pointId: null,
     });
 
     const shouldAuto = autoPlay && guide.autoPlayIntro !== false && !muted;
-    if (shouldAuto && guide.intro) {
+    if (shouldAuto && introText) {
       // 需使用者手勢後才自動播；若尚未解鎖則只顯示文案
-      if (unlockedAudio) speak(guide.intro, { key: `${scene.id}__intro` });
+      const key = useEn ? `${scene.id}__intro_en` : `${scene.id}__intro`;
+      if (unlockedAudio) speak(introText, { key, lang: useEn ? 'en' : 'zh' });
     }
   }
 
@@ -910,11 +923,16 @@ export function createGuideController({
     const title = els.title?.textContent || '';
     const text = els.text?.textContent || '';
     if (!text) return;
-    const sceneId = getScene?.()?.id || null;
-    const key = sceneId ? `${sceneId}__${activePointId || 'intro'}` : null;
-    // 機台介紹已含標題；場景介紹直接播正文
-    if (activePointId) speak(`${title}。${text}`, { force: true, key });
-    else speak(text, { force: true, key });
+    const scene = getScene?.();
+    if (activePointId) {
+      // 機台介紹已含標題
+      const key = scene ? `${scene.id}__${activePointId}` : null;
+      speak(`${title}。${text}`, { force: true, key });
+      return;
+    }
+    const useEn = lang === 'en' && scene?.guide?.introEn;
+    const key = scene ? (useEn ? `${scene.id}__intro_en` : `${scene.id}__intro`) : null;
+    speak(text, { force: true, key, lang: useEn ? 'en' : 'zh' });
   }
 
   function bindUi() {

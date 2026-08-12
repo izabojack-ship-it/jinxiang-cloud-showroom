@@ -15,7 +15,7 @@ try {
   guideApi = null;
 }
 
-const MEDIA_VERSION = '83';
+const MEDIA_VERSION = '84';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
@@ -509,9 +509,16 @@ async function focusPoint(point) {
 
 function activateGuideForScene(scene, { initial = false } = {}) {
   if (!guide) return;
-  // 公司介紹只在點進網址時播一次；各展間不再自動講解，僅同步機台點選清單
+  // 公司介紹只在點進網址時播一次
   if (initial) {
     guide.presentCompanyIntro?.();
+    return;
+  }
+  // 只有設定導覽文案的重點展站會自動講解，其餘僅同步機台點選清單
+  if (scene?.guide?.enabled && scene.guide.intro) {
+    guide.presentSceneIntro(scene, {
+      autoPlay: scene.guide.autoPlayIntro !== false,
+    });
     return;
   }
   guide.syncScene?.(scene);

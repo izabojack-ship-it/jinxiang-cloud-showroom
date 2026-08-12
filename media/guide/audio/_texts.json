@@ -4,5 +4,11 @@
   "station-1f-qa-lab__poi-qa-inspect-bench": "b197551d2bf6855be4a79cb0538546a0",
   "station-1f-qa-lab__poi-qa-measure-station": "c74026729fcf87b0077f76c212b5ef3e",
   "station-1f-qa-lab__poi-qa-anomaly-board": "90bf2bc3fce47cd48679a2c630f7ee07",
-  "station-1f-qa-lab__poi-qa-tool-cabinet": "d37b3beb24903c9cae763b1ace6db9e0"
+  "station-1f-qa-lab__poi-qa-tool-cabinet": "d37b3beb24903c9cae763b1ace6db9e0",
+  "station-1f-mold__intro": "5066a11c2860cc6374b984d0e5a1a911",
+  "station-1f-mold__intro_en": "3ef2188fdf0605e1342360fa7b59ee80",
+  "station-1f-paint__intro": "1013a096ca9e4abda1d51ad72c2b4f39",
+  "station-1f-paint__intro_en": "5aceca75da5c0a2c0fe92128f804ffcf",
+  "station-2f-design__intro": "124bc5338400a79df643b03b49ef571c",
+  "station-2f-design__intro_en": "45ca2ed9e39dfcbd2d22211c52ff3465"
 }
