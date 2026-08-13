@@ -836,19 +836,25 @@ html, body {
     pointer-events: none;
   }
 
-  .f360-ui.is-panels-collapsed {
-    --f360-thumbs-h: 44px;
+  /* 橫式仍可展開展區動線：與資訊面板收合脫鉤，改為精簡列 */
+  .f360-ui {
+    --f360-thumbs-h: 86px;
   }
 
-  .f360-ui.is-panels-collapsed .f360-thumbs {
-    max-height: 0;
-    opacity: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-width: 0;
-    overflow: hidden;
-    pointer-events: none;
+  .f360-ui.is-thumbs-collapsed {
+    --f360-thumbs-h: 40px;
   }
+
+  .f360-thumbs {
+    max-height: 72px;
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .f360-thumb { width: 62px; }
+  .f360-thumb__img { height: 34px; }
+  .f360-thumb__name { font-size: 0.62rem; }
+  .f360-thumb__floor { display: none; }
 }
 
 /* ----- 桌機／筆電：字體與小圖放大（手機維持上方 max-width:720 設定） ----- */

@@ -15,7 +15,7 @@ try {
   guideApi = null;
 }
 
-const MEDIA_VERSION = '87';
+const MEDIA_VERSION = '88';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
@@ -774,7 +774,6 @@ function syncLandscapePanels() {
   if (isCompactLandscape()) {
     if (!landscapeAutoCollapsed && !uiEl?.classList.contains('is-panels-collapsed')) {
       setPanelsCollapsed(true, { persist: false });
-      setThumbsCollapsed(true);
       landscapeAutoCollapsed = true;
     }
   } else {
@@ -805,16 +804,13 @@ function bindPanelsToggle() {
   if (isCompactLandscape()) {
     collapsed = true;
     landscapeAutoCollapsed = true;
-    setThumbsCollapsed(true);
+    setThumbsCollapsed(false);
   }
   setPanelsCollapsed(collapsed, { persist: !isCompactLandscape() });
 
   panelsToggleBtn?.addEventListener('click', () => {
     const next = !uiEl?.classList.contains('is-panels-collapsed');
     setPanelsCollapsed(next);
-    if (isCompactLandscape() && next) {
-      setThumbsCollapsed(true);
-    }
   });
 
   window.addEventListener('orientationchange', () => {
