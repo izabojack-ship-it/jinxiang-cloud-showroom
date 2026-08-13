@@ -305,9 +305,23 @@ export function createGuideController({
       .f360-gv[hidden] { display: none !important; }
       .f360-gv video { display: block; }
       .f360-gv video.is-pack-src {
-        position: absolute; width: 2px; height: 2px; opacity: 0; pointer-events: none;
+        /* iPhone 對 opacity:0／極小尺寸的 video 不會解碼畫面，必須離屏但仍有實體尺寸 */
+        position: absolute !important;
+        left: -12000px !important;
+        top: 0 !important;
+        width: 360px !important;
+        height: 240px !important;
+        max-width: none !important;
+        opacity: 1 !important;
+        pointer-events: none !important;
+        filter: none !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
       }
       .f360-gv__pack {
+        position: relative;
+        z-index: 2;
         display: block; width: auto; background: transparent;
         filter: drop-shadow(0 16px 26px rgba(0,0,0,0.5));
       }
@@ -370,7 +384,6 @@ export function createGuideController({
     videoEl.setAttribute('webkit-playsinline', '');
     videoEl.preload = 'auto';
     videoEl.muted = false;
-    videoEl.crossOrigin = 'anonymous';
     videoPlate = document.createElement('div');
     videoPlate.className = 'f360-gv__plate';
     videoPlate.textContent = els.name?.textContent || '金享導覽員';
@@ -413,6 +426,16 @@ export function createGuideController({
     }
   }
 
+  /** iPhone／iPad／Safari：WebM 即使能播也沒有透明通道，必須走 H.264 遮罩合成 */
+  function needsPackedCutout() {
+    const ua = navigator.userAgent || '';
+    const iOS = /iPad|iPhone|iPod/.test(ua)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+      || /CriOS|FxiOS|EdgiOS/.test(ua);
+    const safari = /Safari/.test(ua) && !/Chrome|Chromium|Edg|Firefox|CriOS|FxiOS/.test(ua);
+    return iOS || safari || !supportsWebmAlpha();
+  }
+
   function stopPackedComposite() {
     window.cancelAnimationFrame(packRaf);
     packRaf = 0;
@@ -444,16 +467,21 @@ export function createGuideController({
         packOff.width = w;
         packOff.height = vh;
       }
-      const ctx = packCanvas.getContext('2d', { willReadFrequently: true });
-      const octx = packOff.getContext('2d', { willReadFrequently: true });
-      ctx.drawImage(videoEl, 0, 0, w, vh, 0, 0, w, vh);
-      octx.drawImage(videoEl, w, 0, w, vh, 0, 0, w, vh);
-      const color = ctx.getImageData(0, 0, w, vh);
-      const mask = octx.getImageData(0, 0, w, vh);
-      const cd = color.data;
-      const md = mask.data;
-      for (let i = 0; i < cd.length; i += 4) cd[i + 3] = md[i];
-      ctx.putImageData(color, 0, 0);
+      try {
+        const ctx = packCanvas.getContext('2d', { willReadFrequently: true });
+        const octx = packOff.getContext('2d', { willReadFrequently: true });
+        if (!ctx || !octx) return;
+        ctx.drawImage(videoEl, 0, 0, w, vh, 0, 0, w, vh);
+        octx.drawImage(videoEl, w, 0, w, vh, 0, 0, w, vh);
+        const color = ctx.getImageData(0, 0, w, vh);
+        const mask = octx.getImageData(0, 0, w, vh);
+        const cd = color.data;
+        const md = mask.data;
+        for (let i = 0; i < cd.length; i += 4) cd[i + 3] = md[i];
+        ctx.putImageData(color, 0, 0);
+      } catch {
+        /* iOS 偶發畫布讀取失敗時略過該幀，下一幀再試 */
+      }
     };
     packRaf = window.requestAnimationFrame(tick);
   }
@@ -484,23 +512,26 @@ export function createGuideController({
     ensureVideoEl();
     const token = ++videoToken;
     // iPhone／Safari 不支援 WebM 透明通道，改用左右拼接的 H.264（左彩圖、右遮罩）在 canvas 合成去背
-    const cutoutFirst = supportsWebmAlpha()
-      ? [['webm', 'cutout'], ['ios.mp4', 'cutout-pack'], ['mp4', 'window']]
-      : [['ios.mp4', 'cutout-pack'], ['mp4', 'window']];
+    const cutoutFirst = needsPackedCutout()
+      ? [['ios.mp4', 'cutout-pack'], ['mp4', 'window']]
+      : [['webm', 'cutout'], ['ios.mp4', 'cutout-pack'], ['mp4', 'window']];
     const candidates = mode === 'cutout' ? cutoutFirst : [['mp4', 'window']];
     let url = null;
     let fmt = null;
     for (const [ext, kind] of candidates) {
       const candidate = `${VIDEO_BASE}${encodeURIComponent(key)}.${ext}`;
       if (missingVideos.has(candidate)) continue;
+      if (kind === 'cutout-pack') {
+        url = candidate;
+        fmt = kind;
+        break;
+      }
       try {
-        // 先用探測元素確認影片存在，避免把顯示中的畫面清掉
         await probeVideo(candidate);
         url = candidate;
         fmt = kind;
         break;
       } catch (err) {
-        // 逾時不列入缺檔名單（可能只是還在產生中），下次仍會再試
         if (err?.message === 'guide-video-missing') missingVideos.add(candidate);
       }
     }
@@ -516,7 +547,21 @@ export function createGuideController({
     if (fmt === 'cutout-pack') startPackedComposite();
     else stopPackedComposite();
     videoEl.src = url;
-    await videoEl.play();
+    try {
+      await videoEl.play();
+    } catch (err) {
+      if (fmt === 'cutout-pack') {
+        missingVideos.add(url);
+        stopPackedComposite();
+        const fallback = `${VIDEO_BASE}${encodeURIComponent(key)}.mp4`;
+        els.root?.classList.remove('is-fmt-cutout');
+        els.root?.classList.add('is-fmt-window');
+        videoEl.src = fallback;
+        await videoEl.play();
+        return;
+      }
+      throw err;
+    }
   }
 
   /** 缺影片時的穩定處理：真人畫面定格續留，不跳回立牌 */
