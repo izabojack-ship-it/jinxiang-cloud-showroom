@@ -304,13 +304,22 @@ export function createGuideController({
       }
       .f360-gv[hidden] { display: none !important; }
       .f360-gv video { display: block; }
+      .f360-gv video.is-pack-src {
+        position: absolute; width: 2px; height: 2px; opacity: 0; pointer-events: none;
+      }
+      .f360-gv__pack {
+        display: block; width: auto; background: transparent;
+        filter: drop-shadow(0 16px 26px rgba(0,0,0,0.5));
+      }
+      .f360-gv__pack[hidden] { display: none !important; }
       .f360-guide.is-fmt-window .f360-gv video {
         height: min(46vh, 430px); aspect-ratio: 3 / 4; width: auto;
         object-fit: cover; object-position: 50% 18%;
         border-radius: 16px; border: 1px solid rgba(212,160,23,0.45);
         box-shadow: 0 18px 44px rgba(0,0,0,0.5); background: #0b0f14;
       }
-      .f360-guide.is-fmt-cutout .f360-gv video {
+      .f360-guide.is-fmt-cutout .f360-gv video,
+      .f360-guide.is-fmt-cutout .f360-gv__pack {
         height: min(50vh, 470px); width: auto; background: transparent;
         filter: drop-shadow(0 16px 26px rgba(0,0,0,0.5));
       }
@@ -324,7 +333,8 @@ export function createGuideController({
       .f360-guide.is-video-live .f360-presenter { display: none !important; }
       @media (max-width: 720px) {
         .f360-guide[data-guide-mode="window"] .f360-gv video { height: min(34vh, 300px); }
-        .f360-guide[data-guide-mode="cutout"] .f360-gv video { height: min(36vh, 320px); }
+        .f360-guide[data-guide-mode="cutout"] .f360-gv video,
+        .f360-guide[data-guide-mode="cutout"] .f360-gv__pack { height: min(36vh, 320px); }
         .f360-gv__plate { display: none; }
       }
       /* 手機橫向：導覽員縮小貼右下角，避免遮住環景 */
@@ -336,7 +346,9 @@ export function createGuideController({
         .f360-guide.is-fmt-window .f360-gv video,
         .f360-guide[data-guide-mode="window"] .f360-gv video { height: min(36vh, 140px); }
         .f360-guide.is-fmt-cutout .f360-gv video,
-        .f360-guide[data-guide-mode="cutout"] .f360-gv video {
+        .f360-guide.is-fmt-cutout .f360-gv__pack,
+        .f360-guide[data-guide-mode="cutout"] .f360-gv video,
+        .f360-guide[data-guide-mode="cutout"] .f360-gv__pack {
           height: min(40vh, 155px);
           filter: drop-shadow(0 8px 14px rgba(0,0,0,0.45));
         }
@@ -354,7 +366,11 @@ export function createGuideController({
     videoBox.hidden = true;
     videoEl = document.createElement('video');
     videoEl.playsInline = true;
+    videoEl.setAttribute('playsinline', '');
+    videoEl.setAttribute('webkit-playsinline', '');
     videoEl.preload = 'auto';
+    videoEl.muted = false;
+    videoEl.crossOrigin = 'anonymous';
     videoPlate = document.createElement('div');
     videoPlate.className = 'f360-gv__plate';
     videoPlate.textContent = els.name?.textContent || '金享導覽員';
@@ -384,6 +400,63 @@ export function createGuideController({
 
   /** 已知缺檔的影片網址，避免重複探測造成延遲 */
   const missingVideos = new Set();
+  let packCanvas = null;
+  let packOff = null;
+  let packRaf = 0;
+
+  function supportsWebmAlpha() {
+    try {
+      const probe = document.createElement('video');
+      return Boolean(probe.canPlayType('video/webm; codecs="vp9"'));
+    } catch {
+      return false;
+    }
+  }
+
+  function stopPackedComposite() {
+    window.cancelAnimationFrame(packRaf);
+    packRaf = 0;
+    videoEl?.classList.remove('is-pack-src');
+    if (packCanvas) packCanvas.hidden = true;
+  }
+
+  function startPackedComposite() {
+    if (!videoEl || !videoBox) return;
+    if (!packCanvas) {
+      packCanvas = document.createElement('canvas');
+      packCanvas.className = 'f360-gv__pack';
+      packOff = document.createElement('canvas');
+      videoBox.appendChild(packCanvas);
+    }
+    packCanvas.hidden = false;
+    videoEl.classList.add('is-pack-src');
+    window.cancelAnimationFrame(packRaf);
+    const tick = () => {
+      packRaf = window.requestAnimationFrame(tick);
+      if (!videoEl || videoEl.readyState < 2) return;
+      const vw = videoEl.videoWidth;
+      const vh = videoEl.videoHeight;
+      if (vw < 4 || vh < 2) return;
+      const w = Math.floor(vw / 2);
+      if (packCanvas.width !== w || packCanvas.height !== vh) {
+        packCanvas.width = w;
+        packCanvas.height = vh;
+        packOff.width = w;
+        packOff.height = vh;
+      }
+      const ctx = packCanvas.getContext('2d', { willReadFrequently: true });
+      const octx = packOff.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(videoEl, 0, 0, w, vh, 0, 0, w, vh);
+      octx.drawImage(videoEl, w, 0, w, vh, 0, 0, w, vh);
+      const color = ctx.getImageData(0, 0, w, vh);
+      const mask = octx.getImageData(0, 0, w, vh);
+      const cd = color.data;
+      const md = mask.data;
+      for (let i = 0; i < cd.length; i += 4) cd[i + 3] = md[i];
+      ctx.putImageData(color, 0, 0);
+    };
+    packRaf = window.requestAnimationFrame(tick);
+  }
 
   function probeVideo(url) {
     return new Promise((resolve, reject) => {
@@ -410,10 +483,11 @@ export function createGuideController({
   async function playVideoClip(key) {
     ensureVideoEl();
     const token = ++videoToken;
-    // 去背模式優先用 webm，缺檔時退而用視窗版 mp4（仍是真人，不落回立牌）
-    const candidates = mode === 'cutout'
-      ? [['webm', 'cutout'], ['mp4', 'window']]
-      : [['mp4', 'window']];
+    // iPhone／Safari 不支援 WebM 透明通道，改用左右拼接的 H.264（左彩圖、右遮罩）在 canvas 合成去背
+    const cutoutFirst = supportsWebmAlpha()
+      ? [['webm', 'cutout'], ['ios.mp4', 'cutout-pack'], ['mp4', 'window']]
+      : [['ios.mp4', 'cutout-pack'], ['mp4', 'window']];
+    const candidates = mode === 'cutout' ? cutoutFirst : [['mp4', 'window']];
     let url = null;
     let fmt = null;
     for (const [ext, kind] of candidates) {
@@ -435,10 +509,12 @@ export function createGuideController({
     // 互斥保險：播影片前，錄音與合成語音一律停止
     stopRecorded();
     if (speechSupported) window.speechSynthesis.cancel();
-    els.root?.classList.toggle('is-fmt-cutout', fmt === 'cutout');
+    els.root?.classList.toggle('is-fmt-cutout', fmt === 'cutout' || fmt === 'cutout-pack');
     els.root?.classList.toggle('is-fmt-window', fmt === 'window');
     videoBox.hidden = false;
     els.root?.classList.add('is-video-live');
+    if (fmt === 'cutout-pack') startPackedComposite();
+    else stopPackedComposite();
     videoEl.src = url;
     await videoEl.play();
   }
@@ -459,6 +535,7 @@ export function createGuideController({
     if (!videoEl) return;
     videoToken += 1;
     stopVideoWatchdog();
+    stopPackedComposite();
     try { videoEl.pause(); } catch { /* ignore */ }
     usingVideo = false;
     if (hide) {

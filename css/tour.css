@@ -1869,12 +1869,7 @@ body.is-place-mode .f360-guide-open {
   }
 }
 
-.f360-ui.is-panels-collapsed .f360-guide,
-.f360-ui.is-panels-collapsed .f360-guide-open {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
+/* 收合資訊只藏品牌／下一站／動線，導覽員在橫式仍要保留 */
 
 @media (max-width: 720px) {
   .f360-guide-open {
