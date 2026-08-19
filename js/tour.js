@@ -15,7 +15,7 @@ try {
   guideApi = null;
 }
 
-const MEDIA_VERSION = '93';
+const MEDIA_VERSION = '94';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
@@ -515,11 +515,8 @@ async function focusPoint(point) {
 
 function activateGuideForScene(scene, { initial = false } = {}) {
   if (!guide) return;
-  // 一進網址先播公司介紹；之後點工廠大門可再聽一次
-  if (initial) {
-    guide.presentCompanyIntro?.();
-    return;
-  }
+  // 開場公司介紹在進站時就已開始；這裡不要重播，以免環景載完把語音打斷
+  if (initial) return;
   if (scene?.guide?.enabled && scene.guide.intro) {
     guide.presentSceneIntro(scene, {
       autoPlay: scene.guide.autoPlayIntro !== false,
@@ -855,8 +852,7 @@ function bindControls() {
   });
 
   // 首次互動後解鎖自動語音（瀏覽器自動播放政策）
-  const unlockOnce = () => guide?.unlockAudio();
-  document.addEventListener('pointerdown', unlockOnce, { once: true, passive: true });
+  document.addEventListener('pointerdown', () => guide?.unlockAudio(), { capture: true, passive: true });
 }
 
 function resolveStartScene() {
@@ -891,6 +887,7 @@ async function bootstrap() {
     const startPoint = params.get('point');
 
     initGuide();
+    guide?.presentCompanyIntro?.();
     bindPlacePanel();
     buildThumbnailMenu();
     bindControls();

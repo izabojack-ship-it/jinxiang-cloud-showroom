@@ -396,6 +396,7 @@ export function createGuideController({
 
     videoEl.addEventListener('play', () => {
       usingVideo = true;
+      companyIntroPending = false;
       setSpeaking(true);
       startVideoWatchdog();
       startMediaCaptionSync(() => videoEl);
@@ -618,8 +619,12 @@ export function createGuideController({
     if (audioEl) return;
     audioEl = new Audio();
     audioEl.preload = 'auto';
+    audioEl.playsInline = true;
+    audioEl.setAttribute('playsinline', '');
+    audioEl.setAttribute('webkit-playsinline', '');
     audioEl.addEventListener('play', () => {
       usingAudio = true;
+      companyIntroPending = false;
       setSpeaking(true);
       startAmpLoop();
       startMediaCaptionSync(() => audioEl);
@@ -885,6 +890,16 @@ export function createGuideController({
     setSpeechProgress(0);
   }
 
+  function isAutoplayBlocked(err) {
+    const name = err?.name || '';
+    const msg = String(err?.message || '');
+    return name === 'NotAllowedError' || /not allowed|interact|gesture|play\(\) request was interrupted/i.test(msg);
+  }
+
+  function onSpeakBlocked() {
+    if (companyMode) companyIntroPending = true;
+  }
+
   function speak(text, { force = false, key = null, lang: speakLang = 'zh' } = {}) {
     if (!text?.trim()) return;
     if (muted && !force) return;
@@ -895,25 +910,32 @@ export function createGuideController({
     currentSpeakText = text;
     currentSpeakLang = speakLang;
 
+    const fallbackToTts = (err) => {
+      if (isAutoplayBlocked(err)) {
+        onSpeakBlocked();
+        return;
+      }
+      usingAudio = false;
+      speakTts(text, speakLang);
+    };
+
     // 真人影片模式：有對應影片就播影片；缺檔時真人定格＋語音，維持畫面穩定
     if (mode !== 'avatar' && key) {
       playVideoClip(key).catch((err) => {
         if (err?.message === 'guide-video-stale') return;
+        if (isAutoplayBlocked(err)) {
+          onSpeakBlocked();
+          return;
+        }
         freezeOrHideVideo();
-        playRecorded(key).catch(() => {
-          usingAudio = false;
-          speakTts(text, speakLang);
-        });
+        playRecorded(key).catch(fallbackToTts);
       });
       return;
     }
     if (mode !== 'avatar') freezeOrHideVideo();
 
     if (key) {
-      playRecorded(key).catch(() => {
-        usingAudio = false;
-        speakTts(text, speakLang);
-      });
+      playRecorded(key).catch(fallbackToTts);
       return;
     }
     speakTts(text, speakLang);
@@ -1036,7 +1058,20 @@ export function createGuideController({
     renderPoiList(scene);
   }
 
-  /** 公司介紹：點進網址的開場旁白，支援中英切換 */
+  function tryStartCompanyIntro() {
+    if (!companyIntroPending || !companyMode || muted) return;
+    if (speaking || usingAudio || usingVideo) {
+      companyIntroPending = false;
+      return;
+    }
+    if (tryStartCompanyIntro.lock) return;
+    tryStartCompanyIntro.lock = true;
+    window.setTimeout(() => { tryStartCompanyIntro.lock = false; }, 500);
+    const c = COMPANY_INTRO[lang] || COMPANY_INTRO.zh;
+    speak(c.text, { key: `company__intro_${lang}`, lang });
+  }
+
+  /** 公司介紹：一進網址就開講，支援中英切換 */
   function presentCompanyIntro({ autoPlay = true } = {}) {
     showPanel();
     companyMode = true;
@@ -1045,13 +1080,11 @@ export function createGuideController({
     if (els.title) els.title.textContent = c.title;
     renderSpeakableText(c.text);
     renderPoiList(getScene?.());
-    if (!autoPlay || muted) return;
-    if (unlockedAudio) {
-      speak(c.text, { key: `company__intro_${lang}`, lang });
-    } else {
-      // 瀏覽器自動播放限制：等首次觸控／點擊後開講
-      companyIntroPending = true;
-    }
+    if (!autoPlay) return;
+    // 開場一定要出聲：不沿用上次靜音，也不再等使用者按播放鍵
+    if (muted) setMuted(false);
+    companyIntroPending = true;
+    tryStartCompanyIntro();
   }
 
   function setLang(next) {
@@ -1238,15 +1271,14 @@ export function createGuideController({
       updateLangBtn();
     }
 
-    // 首次觸控／點擊後，若公司介紹還在等待自動播放，立即開講
-    document.addEventListener('pointerdown', () => {
+    // 任何畫面互動都立刻開講（含環景拖曳），不必再按播放鍵
+    const flushIntro = () => {
       unlockedAudio = true;
-      if (companyIntroPending && companyMode && !muted && !speaking) {
-        companyIntroPending = false;
-        const c = COMPANY_INTRO[lang] || COMPANY_INTRO.zh;
-        speak(c.text, { key: `company__intro_${lang}`, lang });
-      }
-    }, { once: true, passive: true });
+      try { audioCtx?.resume(); } catch { /* ignore */ }
+      tryStartCompanyIntro();
+    };
+    document.addEventListener('pointerdown', flushIntro, { capture: true, passive: true });
+    document.addEventListener('keydown', flushIntro, { capture: true, passive: true });
     applyMode(mode);
 
     // 預熱 voices
@@ -1275,7 +1307,11 @@ export function createGuideController({
     hidePanel,
     showPanel,
     setCollapsed,
-    unlockAudio() { unlockedAudio = true; },
+    unlockAudio() {
+      unlockedAudio = true;
+      try { audioCtx?.resume(); } catch { /* ignore */ }
+      tryStartCompanyIntro();
+    },
     isMuted: () => muted,
     markIntroSeen(sceneId) {
       try {
