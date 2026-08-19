@@ -15,7 +15,7 @@ try {
   guideApi = null;
 }
 
-const MEDIA_VERSION = '96';
+const MEDIA_VERSION = '97';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';

@@ -210,6 +210,7 @@ export function createGuideController({
   let langBtn = null;
   let companyMode = false; // 目前字幕內容是否為公司介紹
   let companyIntroPending = false; // 等待首次手勢後自動開講
+  let bootIntroConsumed = false; // 開場音訊只接手一次，之後重播走一般流程
   let currentSpeakKey = null;
   let currentSpeakText = '';
   let currentSpeakLang = 'zh';
@@ -638,6 +639,7 @@ export function createGuideController({
       }
     });
     audioEl.addEventListener('ended', () => {
+      if (audioEl === window.__f360BootAudio) bootIntroConsumed = true;
       stopMediaCaptionSync();
       usingAudio = false;
       setSpeaking(false);
@@ -658,12 +660,6 @@ export function createGuideController({
     setSpeaking(true);
     startAmpLoop();
     startMediaCaptionSync(() => audioEl);
-  }
-
-  function isBootPlaying(key) {
-    const boot = window.__f360BootAudio;
-    if (!boot || window.__f360BootKey !== key) return false;
-    return !boot.paused && !boot.ended;
   }
 
   function startAmpLoop() {
@@ -698,26 +694,7 @@ export function createGuideController({
     stopVideo();
     if (speechSupported) window.speechSynthesis.cancel();
     ensureAudioEl();
-    const boot = window.__f360BootAudio;
-    const isBoot = boot && audioEl === boot && window.__f360BootKey === key;
-    // 開場音訊已在 HTML 啟動：絕不要重設 src，否則會把自動播放殺掉
-    if (isBoot && !audioEl.ended) {
-      bindAudioEl(boot);
-      if (!audioEl.paused) {
-        attachPlayingAudio();
-        return;
-      }
-      await audioEl.play();
-      attachPlayingAudio();
-      return;
-    }
-    const url = `${AUDIO_BASE}${encodeURIComponent(key)}.mp3`;
-    const same = audioEl.src && audioEl.src.includes(encodeURIComponent(key));
-    if (same && !audioEl.paused && !audioEl.ended) {
-      attachPlayingAudio();
-      return;
-    }
-    audioEl.src = url;
+    audioEl.src = `${AUDIO_BASE}${encodeURIComponent(key)}.mp3`;
     await audioEl.play();
     if (offset > 0) {
       try { audioEl.currentTime = offset; } catch { /* ignore */ }
@@ -956,26 +933,27 @@ export function createGuideController({
       playRecorded(key).catch(fallbackToTts);
     };
 
-    // 進站時 HTML 已開始播公司介紹：沿用同一段，不要 stop 後重設 src
-    if (key && window.__f360BootKey === key && window.__f360BootAudio && mode === 'avatar') {
+    // 開場公司介紹：不分導覽員模式，直接沿用 HTML 的開場音訊（點擊當下就能出聲）
+    if (key && window.__f360BootKey === key && window.__f360BootAudio && !bootIntroConsumed) {
       stopVideo();
       if (speechSupported) window.speechSynthesis.cancel();
-      bindAudioEl(window.__f360BootAudio);
       const boot = window.__f360BootAudio;
-      const takeOver = () => {
-        if (boot.ended) {
-          startRecorded();
-          return;
-        }
-        if (!boot.paused) {
-          attachPlayingAudio();
-          return;
-        }
-        Promise.resolve(window.__f360BootPlay)
-          .then(() => attachPlayingAudio())
-          .catch(() => onSpeakBlocked());
-      };
-      Promise.resolve(window.__f360BootPlay).then(takeOver).catch(() => onSpeakBlocked());
+      bindAudioEl(boot);
+      if (boot.ended) {
+        bootIntroConsumed = true;
+        startRecorded();
+        return;
+      }
+      if (!boot.paused) {
+        bootIntroConsumed = true;
+        attachPlayingAudio();
+        return;
+      }
+      // 在使用者手勢中呼叫 play() 一定會成功；非手勢被擋則等下一次互動再開講
+      boot.play().then(() => {
+        bootIntroConsumed = true;
+        attachPlayingAudio();
+      }).catch(() => onSpeakBlocked());
       return;
     }
 
