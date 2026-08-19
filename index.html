@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.1/index.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5.14.1/index.css">
-  <link rel="stylesheet" href="./css/tour.css?v=95">
+  <link rel="stylesheet" href="./css/tour.css?v=96">
   <script type="importmap">
   {
     "imports": {
@@ -24,30 +24,84 @@
   </script>
 </head>
 <body>
-  <audio id="f360-boot-audio" autoplay playsinline preload="auto"></audio>
+  <audio id="f360-boot-audio" autoplay playsinline preload="auto" src="./media/guide/audio/company__intro_zh.mp3"></audio>
+  <div id="viewer" aria-label="360° 環景檢視器"></div>
+
+  <div id="f360-loader" class="f360-loader" role="status" aria-live="polite">
+    <div class="f360-loader__inner">
+      <div id="f360-loader-ring" class="f360-loader__ring" aria-hidden="true"></div>
+      <p class="f360-loader__title">金享車業雲端展間</p>
+      <p id="f360-loader-sub" class="f360-loader__sub">正在載入環景導覽…</p>
+      <button type="button" id="f360-enter-btn" class="f360-enter-btn" hidden>進入展間</button>
+    </div>
+  </div>
   <script>
     (function () {
       var lang = 'zh';
       try { if (localStorage.getItem('f360-guide-lang') === 'en') lang = 'en'; } catch (e) {}
       var el = document.getElementById('f360-boot-audio');
+      var loader = document.getElementById('f360-loader');
+      var ring = document.getElementById('f360-loader-ring');
+      var sub = document.getElementById('f360-loader-sub');
+      var btn = document.getElementById('f360-enter-btn');
       el.setAttribute('playsinline', '');
       el.setAttribute('webkit-playsinline', '');
       var key = 'company__intro_' + lang;
-      el.src = './media/guide/audio/' + encodeURIComponent(key) + '.mp3';
+      var src = './media/guide/audio/' + encodeURIComponent(key) + '.mp3';
+      if (el.getAttribute('src') !== src) el.src = src;
       window.__f360BootKey = key;
       window.__f360BootAudio = el;
+      window.__f360BootState = 'pending';
+
+      function maybeHideLoader() {
+        if (!loader) return;
+        if (window.__f360BootState === 'need-enter' || window.__f360BootState === 'pending') return;
+        if (!window.__f360ViewerReady) return;
+        loader.classList.add('is-hidden');
+      }
+      window.__f360MaybeHideLoader = maybeHideLoader;
+
+      function showEnter() {
+        window.__f360BootState = 'need-enter';
+        window.__f360NeedEnter = true;
+        if (loader) {
+          loader.classList.add('is-enter');
+          loader.classList.remove('is-hidden');
+        }
+        if (ring) ring.hidden = true;
+        if (sub) sub.textContent = '點選進入，立即開始公司介紹';
+        if (btn) btn.hidden = false;
+      }
+
+      function enterNow() {
+        window.__f360NeedEnter = false;
+        window.__f360BootState = 'ok';
+        window.__f360BootPlay = el.play();
+        if (loader) loader.classList.remove('is-enter');
+        if (btn) btn.hidden = true;
+        if (ring) ring.hidden = false;
+        if (sub) sub.textContent = '正在載入環景導覽…';
+        maybeHideLoader();
+        if (typeof window.__f360OnEntered === 'function') window.__f360OnEntered();
+      }
+
       window.__f360BootPlay = el.play();
+      if (window.__f360BootPlay && window.__f360BootPlay.then) {
+        window.__f360BootPlay.then(function () {
+          window.__f360NeedEnter = false;
+          window.__f360BootState = 'ok';
+          maybeHideLoader();
+        }).catch(showEnter);
+      }
+      if (btn) btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        enterNow();
+      });
+      if (loader) loader.addEventListener('click', function () {
+        if (window.__f360BootState === 'need-enter') enterNow();
+      });
     })();
   </script>
-  <div id="viewer" aria-label="360° 環景檢視器"></div>
-
-  <div id="f360-loader" class="f360-loader" role="status" aria-live="polite">
-    <div class="f360-loader__inner">
-      <div class="f360-loader__ring" aria-hidden="true"></div>
-      <p class="f360-loader__title">金享車業雲端展間</p>
-      <p class="f360-loader__sub">正在載入環景導覽…</p>
-    </div>
-  </div>
 
   <div id="f360-fade" class="f360-fade" aria-hidden="true"></div>
 
@@ -195,6 +249,6 @@
     </div>
   </div>
 
-  <script type="module" src="./js/tour.js?v=95"></script>
+  <script type="module" src="./js/tour.js?v=96"></script>
 </body>
 </html>

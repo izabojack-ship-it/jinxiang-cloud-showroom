@@ -15,7 +15,7 @@ try {
   guideApi = null;
 }
 
-const MEDIA_VERSION = '95';
+const MEDIA_VERSION = '96';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
@@ -692,7 +692,9 @@ function initViewer(startScene) {
   });
 
   viewer.addEventListener('ready', () => {
-    loaderEl?.classList.add('is-hidden');
+    window.__f360ViewerReady = true;
+    if (typeof window.__f360MaybeHideLoader === 'function') window.__f360MaybeHideLoader();
+    else if (!window.__f360NeedEnter) loaderEl?.classList.add('is-hidden');
     syncRadar(viewer.getPosition().yaw);
     updateRouteChrome();
     updateThumbnails();

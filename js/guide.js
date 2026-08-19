@@ -697,12 +697,20 @@ export function createGuideController({
     // 互斥保險：確保影片與合成語音都已靜止，避免聲音重疊
     stopVideo();
     if (speechSupported) window.speechSynthesis.cancel();
-    if (isBootPlaying(key)) {
-      bindAudioEl(window.__f360BootAudio);
+    ensureAudioEl();
+    const boot = window.__f360BootAudio;
+    const isBoot = boot && audioEl === boot && window.__f360BootKey === key;
+    // 開場音訊已在 HTML 啟動：絕不要重設 src，否則會把自動播放殺掉
+    if (isBoot && !audioEl.ended) {
+      bindAudioEl(boot);
+      if (!audioEl.paused) {
+        attachPlayingAudio();
+        return;
+      }
+      await audioEl.play();
       attachPlayingAudio();
       return;
     }
-    ensureAudioEl();
     const url = `${AUDIO_BASE}${encodeURIComponent(key)}.mp3`;
     const same = audioEl.src && audioEl.src.includes(encodeURIComponent(key));
     if (same && !audioEl.paused && !audioEl.ended) {
@@ -948,20 +956,26 @@ export function createGuideController({
       playRecorded(key).catch(fallbackToTts);
     };
 
-    // 進站時 HTML 已開始播公司介紹：沿用同一段，不要 stop 後重播
+    // 進站時 HTML 已開始播公司介紹：沿用同一段，不要 stop 後重設 src
     if (key && window.__f360BootKey === key && window.__f360BootAudio && mode === 'avatar') {
       stopVideo();
       if (speechSupported) window.speechSynthesis.cancel();
       bindAudioEl(window.__f360BootAudio);
       const boot = window.__f360BootAudio;
       const takeOver = () => {
-        if (!boot.paused && !boot.ended) {
+        if (boot.ended) {
+          startRecorded();
+          return;
+        }
+        if (!boot.paused) {
           attachPlayingAudio();
           return;
         }
-        startRecorded();
+        Promise.resolve(window.__f360BootPlay)
+          .then(() => attachPlayingAudio())
+          .catch(() => onSpeakBlocked());
       };
-      Promise.resolve(window.__f360BootPlay).then(takeOver).catch(startRecorded);
+      Promise.resolve(window.__f360BootPlay).then(takeOver).catch(() => onSpeakBlocked());
       return;
     }
 
@@ -1319,14 +1333,10 @@ export function createGuideController({
       updateLangBtn();
     }
 
-    // 任何畫面互動都立刻開講（含環景拖曳），不必再按播放鍵
-    const flushIntro = () => {
+    window.__f360OnEntered = () => {
       unlockedAudio = true;
-      try { audioCtx?.resume(); } catch { /* ignore */ }
       tryStartCompanyIntro();
     };
-    document.addEventListener('pointerdown', flushIntro, { capture: true, passive: true });
-    document.addEventListener('keydown', flushIntro, { capture: true, passive: true });
     applyMode(mode);
 
     // 預熱 voices
