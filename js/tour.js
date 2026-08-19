@@ -15,7 +15,7 @@ try {
   guideApi = null;
 }
 
-const MEDIA_VERSION = '92';
+const MEDIA_VERSION = '93';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
@@ -515,9 +515,9 @@ async function focusPoint(point) {
 
 function activateGuideForScene(scene, { initial = false } = {}) {
   if (!guide) return;
-  // 進網址不自動講解；公司介紹改到工廠大門，與其他展站相同，點選後才播
+  // 一進網址先播公司介紹；之後點工廠大門可再聽一次
   if (initial) {
-    guide.hidePanel();
+    guide.presentCompanyIntro?.();
     return;
   }
   if (scene?.guide?.enabled && scene.guide.intro) {
