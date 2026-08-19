@@ -995,6 +995,13 @@ export function createGuideController({
     return (lang === 'en' && point?.bodyEn) ? point.bodyEn : (point?.body || '');
   }
 
+  function sceneIntroMediaKey(scene, useEn) {
+    if (scene?.guide?.mediaKey) {
+      return `${scene.guide.mediaKey}_${useEn ? 'en' : 'zh'}`;
+    }
+    return useEn ? `${scene.id}__intro_en` : `${scene.id}__intro`;
+  }
+
   function pointSpeakKey(sceneId, point) {
     if (!sceneId || !point?.id) return null;
     return lang === 'en' && point.bodyEn
@@ -1098,16 +1105,18 @@ export function createGuideController({
     const useEn = lang === 'en' && guide.introEn;
     const introText = (useEn ? guide.introEn : guide.intro) || '';
     const sceneTitle = (useEn && scene.titleEn) ? scene.titleEn : scene.title;
+    const heading = useEn
+      ? (guide.introTitleEn || `${sceneTitle} · Introduction`)
+      : (guide.introTitle || `${sceneTitle} · 場景介紹`);
     setScript({
-      title: useEn ? `${sceneTitle} · Introduction` : `${sceneTitle} · 場景介紹`,
+      title: heading,
       text: introText,
       pointId: null,
     });
 
     const shouldAuto = autoPlay && guide.autoPlayIntro !== false && !muted;
     if (shouldAuto && introText) {
-      // 需使用者手勢後才自動播；若尚未解鎖則只顯示文案
-      const key = useEn ? `${scene.id}__intro_en` : `${scene.id}__intro`;
+      const key = sceneIntroMediaKey(scene, useEn);
       if (unlockedAudio) speak(introText, { key, lang: useEn ? 'en' : 'zh' });
     }
   }
@@ -1152,7 +1161,7 @@ export function createGuideController({
     const text = els.text?.textContent || '';
     if (!text) return;
     const useEn = lang === 'en' && scene?.guide?.introEn;
-    const key = scene ? (useEn ? `${scene.id}__intro_en` : `${scene.id}__intro`) : null;
+    const key = scene ? sceneIntroMediaKey(scene, useEn) : null;
     speak(text, { force: true, key, lang: useEn ? 'en' : 'zh' });
   }
 

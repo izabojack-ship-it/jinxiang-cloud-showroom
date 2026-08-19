@@ -15,7 +15,7 @@ try {
   guideApi = null;
 }
 
-const MEDIA_VERSION = '91';
+const MEDIA_VERSION = '92';
 const STATIONS_URL = `./media/stations.json?v=${MEDIA_VERSION}`;
 const DEFAULT_ZOOM = 42;
 const THUMBS_COLLAPSE_KEY = 'f360-thumbs-collapsed';
@@ -243,7 +243,13 @@ function buildThumbnailMenu() {
   thumbsEl.addEventListener('click', (event) => {
     const btn = event.target.closest('.f360-thumb');
     if (!btn) return;
-    switchScene(btn.dataset.sceneId);
+    const targetId = btn.dataset.sceneId;
+    guide?.unlockAudio();
+    if (targetId === currentSceneId) {
+      activateGuideForScene(getScene(targetId));
+      return;
+    }
+    switchScene(targetId);
   });
 }
 
@@ -509,12 +515,11 @@ async function focusPoint(point) {
 
 function activateGuideForScene(scene, { initial = false } = {}) {
   if (!guide) return;
-  // 公司介紹只在點進網址時播一次
+  // 進網址不自動講解；公司介紹改到工廠大門，與其他展站相同，點選後才播
   if (initial) {
-    guide.presentCompanyIntro?.();
+    guide.hidePanel();
     return;
   }
-  // 只有設定導覽文案的重點展站會出現導覽員並講解，其餘展間整個隱藏
   if (scene?.guide?.enabled && scene.guide.intro) {
     guide.presentSceneIntro(scene, {
       autoPlay: scene.guide.autoPlayIntro !== false,

@@ -2,6 +2,7 @@
   {
     "id": "station-gate",
     "title": "工廠大門",
+    "titleEn": "Factory Gate",
     "file": "station-gate.jpg",
     "width": 8192,
     "height": 4096,
@@ -9,6 +10,17 @@
     "default_yaw": "0deg",
     "default_pitch": "-3deg",
     "hfov_deg": 360,
+    "guide": {
+      "enabled": true,
+      "name": "金享導覽員",
+      "role": "虛擬導覽",
+      "autoPlayIntro": true,
+      "mediaKey": "company__intro",
+      "introTitle": "金享車業 Kalloy · 公司介紹",
+      "introTitleEn": "Kalloy · Company Introduction",
+      "intro": "台灣金享 Kalloy 創立於 1980 年，位列全球前三大自行車輕量化零配件專業製造商。公司專注研發製作車把、豎管、座管、座管束等自行車核心配件，產品覆蓋全車型，適配各類騎行場景，遠銷歐美、澳洲等全球主流市場。企業掌握鋁合金鍛造、碳纖維複合成型兩大核心工藝，採 OEM、ODM、OBM 三位一體營運模式，旗下自有國際品牌 UNO。透過台灣、中國、越南三地全球化產能布局，可彈性調配產能，穩定供應全球訂單。完整產線涵蓋模具開發製造、CNC 精密切削、噴砂表面處理、LOGO 刻印成型一貫化作業，一站式完成零配件加工與品牌標識定製。金享堅持 ESG 永續經營理念，嚴控產品品質並提供完善配套服務，長年為國際一線車企提供高規格、定製化自行車零配件整體解決方案。",
+      "introEn": "Founded in 1980, Kalloy Taiwan is among the world's top three professional manufacturers of lightweight bicycle components. We specialize in the R&D and production of core parts including handlebars, stems, seat posts and seat clamps, with products compatible with all bike types and diverse riding scenarios, sold to major global markets across Europe, America, Australia and beyond. We master core technologies of aluminum alloy forging and carbon fiber composite molding, and operate an integrated business model covering OEM, ODM and OBM, owning our international proprietary brand UNO. With global production bases deployed in Taiwan, mainland China and Vietnam, we deliver highly flexible and stable worldwide supply. Our full production line integrates mold manufacturing, CNC precision machining, sandblasting surface finishing and logo marking, realizing one-stop processing and customized brand marking for components. Adhering to ESG sustainable development principles and professional quality services, we have long provided high-end, customized bicycle component solutions for international brands."
+    },
     "links": [
       {
         "id": "link-station-gate-next",
