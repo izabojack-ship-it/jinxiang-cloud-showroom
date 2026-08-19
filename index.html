@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5.14.1/index.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/markers-plugin@5.14.1/index.css">
-  <link rel="stylesheet" href="./css/tour.css?v=94">
+  <link rel="stylesheet" href="./css/tour.css?v=95">
   <script type="importmap">
   {
     "imports": {
@@ -24,6 +24,21 @@
   </script>
 </head>
 <body>
+  <audio id="f360-boot-audio" autoplay playsinline preload="auto"></audio>
+  <script>
+    (function () {
+      var lang = 'zh';
+      try { if (localStorage.getItem('f360-guide-lang') === 'en') lang = 'en'; } catch (e) {}
+      var el = document.getElementById('f360-boot-audio');
+      el.setAttribute('playsinline', '');
+      el.setAttribute('webkit-playsinline', '');
+      var key = 'company__intro_' + lang;
+      el.src = './media/guide/audio/' + encodeURIComponent(key) + '.mp3';
+      window.__f360BootKey = key;
+      window.__f360BootAudio = el;
+      window.__f360BootPlay = el.play();
+    })();
+  </script>
   <div id="viewer" aria-label="360° 環景檢視器"></div>
 
   <div id="f360-loader" class="f360-loader" role="status" aria-live="polite">
@@ -180,6 +195,6 @@
     </div>
   </div>
 
-  <script type="module" src="./js/tour.js?v=94"></script>
+  <script type="module" src="./js/tour.js?v=95"></script>
 </body>
 </html>

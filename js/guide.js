@@ -615,13 +615,15 @@ export function createGuideController({
     updateModeButtons();
   }
 
-  function ensureAudioEl() {
-    if (audioEl) return;
-    audioEl = new Audio();
+  function bindAudioEl(el) {
+    if (!el) return;
+    audioEl = el;
     audioEl.preload = 'auto';
     audioEl.playsInline = true;
     audioEl.setAttribute('playsinline', '');
     audioEl.setAttribute('webkit-playsinline', '');
+    if (audioEl._f360Bound) return;
+    audioEl._f360Bound = true;
     audioEl.addEventListener('play', () => {
       usingAudio = true;
       companyIntroPending = false;
@@ -641,15 +643,27 @@ export function createGuideController({
       setSpeaking(false);
       setSpeechProgress(1);
     });
-    try {
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new Ctx();
-      const srcNode = audioCtx.createMediaElementSource(audioEl);
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 512;
-      srcNode.connect(analyser);
-      analyser.connect(audioCtx.destination);
-    } catch { analyser = null; }
+  }
+
+  function ensureAudioEl() {
+    if (audioEl) return;
+    bindAudioEl(window.__f360BootAudio instanceof HTMLAudioElement
+      ? window.__f360BootAudio
+      : new Audio());
+  }
+
+  function attachPlayingAudio() {
+    usingAudio = true;
+    companyIntroPending = false;
+    setSpeaking(true);
+    startAmpLoop();
+    startMediaCaptionSync(() => audioEl);
+  }
+
+  function isBootPlaying(key) {
+    const boot = window.__f360BootAudio;
+    if (!boot || window.__f360BootKey !== key) return false;
+    return !boot.paused && !boot.ended;
   }
 
   function startAmpLoop() {
@@ -669,6 +683,8 @@ export function createGuideController({
           sum += v * v;
         }
         ampTarget = Math.min(1, Math.sqrt(sum / data.length) * 4.2);
+      } else if (usingAudio) {
+        ampTarget = 0.28 + Math.abs(Math.sin(performance.now() / 85)) * 0.55;
       }
       ampValue += (ampTarget - ampValue) * 0.35;
       els.avatar?.style.setProperty('--amp', ampValue.toFixed(3));
@@ -681,9 +697,19 @@ export function createGuideController({
     // 互斥保險：確保影片與合成語音都已靜止，避免聲音重疊
     stopVideo();
     if (speechSupported) window.speechSynthesis.cancel();
+    if (isBootPlaying(key)) {
+      bindAudioEl(window.__f360BootAudio);
+      attachPlayingAudio();
+      return;
+    }
     ensureAudioEl();
-    audioEl.src = `${AUDIO_BASE}${encodeURIComponent(key)}.mp3`;
-    try { await audioCtx?.resume(); } catch { /* ignore */ }
+    const url = `${AUDIO_BASE}${encodeURIComponent(key)}.mp3`;
+    const same = audioEl.src && audioEl.src.includes(encodeURIComponent(key));
+    if (same && !audioEl.paused && !audioEl.ended) {
+      attachPlayingAudio();
+      return;
+    }
+    audioEl.src = url;
     await audioEl.play();
     if (offset > 0) {
       try { audioEl.currentTime = offset; } catch { /* ignore */ }
@@ -905,7 +931,6 @@ export function createGuideController({
     if (muted && !force) return;
 
     unlockedAudio = true;
-    stopSpeech();
     currentSpeakKey = key;
     currentSpeakText = text;
     currentSpeakLang = speakLang;
@@ -918,6 +943,29 @@ export function createGuideController({
       usingAudio = false;
       speakTts(text, speakLang);
     };
+
+    const startRecorded = () => {
+      playRecorded(key).catch(fallbackToTts);
+    };
+
+    // 進站時 HTML 已開始播公司介紹：沿用同一段，不要 stop 後重播
+    if (key && window.__f360BootKey === key && window.__f360BootAudio && mode === 'avatar') {
+      stopVideo();
+      if (speechSupported) window.speechSynthesis.cancel();
+      bindAudioEl(window.__f360BootAudio);
+      const boot = window.__f360BootAudio;
+      const takeOver = () => {
+        if (!boot.paused && !boot.ended) {
+          attachPlayingAudio();
+          return;
+        }
+        startRecorded();
+      };
+      Promise.resolve(window.__f360BootPlay).then(takeOver).catch(startRecorded);
+      return;
+    }
+
+    stopSpeech();
 
     // 真人影片模式：有對應影片就播影片；缺檔時真人定格＋語音，維持畫面穩定
     if (mode !== 'avatar' && key) {
@@ -935,7 +983,7 @@ export function createGuideController({
     if (mode !== 'avatar') freezeOrHideVideo();
 
     if (key) {
-      playRecorded(key).catch(fallbackToTts);
+      startRecorded();
       return;
     }
     speakTts(text, speakLang);
@@ -1289,6 +1337,8 @@ export function createGuideController({
       });
     }
 
+    const boot = window.__f360BootAudio;
+    if (muted && boot && !boot.paused) muted = false;
     setMuted(muted);
   }
 

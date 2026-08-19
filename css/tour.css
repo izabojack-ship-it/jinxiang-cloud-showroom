@@ -40,6 +40,14 @@ html, body {
   background: #151c26;
 }
 
+#f360-boot-audio {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ----- Loader ----- */
 .f360-loader {
   position: fixed;
