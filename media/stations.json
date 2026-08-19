@@ -24,6 +24,7 @@
   {
     "id": "station-1f-qa-lab",
     "title": "一樓品保實驗室",
+    "titleEn": "1F Quality Assurance Lab",
     "file": "station-1f-qa-lab.jpg",
     "width": 8192,
     "height": 4096,
@@ -36,13 +37,16 @@
       "name": "金享導覽員",
       "role": "虛擬導覽",
       "autoPlayIntro": true,
-      "intro": "歡迎來到金享車業一樓品保實驗室。這裡是品質把關的核心場域，牆上一句「專業成就品牌，誠信成就未來」，也正是我們檢驗工作的精神。您可以點擊畫面中的藍色熱點，聽取試驗機、量測站與異常流程等單點介紹。"
+      "intro": "歡迎來到金享車業一樓品保實驗室。這裡是品質把關的核心場域，牆上一句「專業成就品牌，誠信成就未來」，也正是我們檢驗工作的精神。您可以點擊畫面中的藍色熱點，聽取試驗機、量測站與異常流程等單點介紹。",
+      "introEn": "Welcome to the Kalloy first-floor quality assurance laboratory. This is the core of our quality control. The wall motto—'Professionalism builds the brand; integrity builds the future'—is also the spirit of our inspection work. Tap the blue hotspots on the screen to hear about the testing machine, measuring station, and anomaly process."
     },
     "points": [
       {
         "id": "poi-qa-utm",
         "title": "材料拉力試驗機",
+        "titleEn": "Universal Testing Machine",
         "body": "左側這台落地式材料試驗機，用於驗證材料與成品的拉伸、強度等力學特性，並搭配電腦記錄數據，是品保室關鍵的物性檢測設備。",
+        "bodyEn": "This floor-standing materials testing machine on the left verifies tensile and strength properties of materials and finished parts. Results are recorded on the computer, making it a key physical-property instrument in the QA lab.",
         "position": {
           "yaw": "-68deg",
           "pitch": "-6deg"
@@ -51,7 +55,9 @@
       {
         "id": "poi-qa-inspect-bench",
         "title": "待檢品工作台",
+        "titleEn": "Incoming Inspection Bench",
         "body": "中央青綠色工作台為日常檢驗區，下方置物格標示待檢品，方便依工序暫存與分流，確保每一件產品都能依序完成尺寸與外觀確認。",
+        "bodyEn": "The central teal workbench is the daily inspection area. Storage below is labeled for incoming parts, so items can be held and routed by process and every product completes dimensional and visual checks in order.",
         "position": {
           "yaw": "-8deg",
           "pitch": "-18deg"
@@ -60,7 +66,9 @@
       {
         "id": "poi-qa-measure-station",
         "title": "精密量測工作站",
+        "titleEn": "Precision Measuring Station",
         "body": "右側量測工作站配置精密滑軌與量測治具，並連接電腦即時顯示數據，適合進行高精度尺寸比對與製程抽檢。",
+        "bodyEn": "The measuring station on the right is fitted with precision slides and fixtures, and is connected to a computer for live readings. It is used for high-accuracy dimensional comparison and in-process sampling.",
         "position": {
           "yaw": "42deg",
           "pitch": "-12deg"
@@ -69,7 +77,9 @@
       {
         "id": "poi-qa-anomaly-board",
         "title": "異常流程看板",
+        "titleEn": "Anomaly Process Board",
         "body": "牆上的異常流程圖說明品質異常時的回報、隔離與改善步驟，讓現場人員能快速依標準作業處理，避免不良品流入下一站。",
+        "bodyEn": "The wall flowchart explains how to report, isolate, and correct quality anomalies so staff can follow standard steps quickly and keep nonconforming parts from moving to the next station.",
         "position": {
           "yaw": "112deg",
           "pitch": "-2deg"
@@ -78,7 +88,9 @@
       {
         "id": "poi-qa-tool-cabinet",
         "title": "量測治具櫃",
+        "titleEn": "Measuring Fixture Cabinet",
         "body": "左側金屬櫃用於收納常用量具、治具與校正相關用品，維持檢驗環境整潔，也確保量測工具取用與保管有固定位置。",
+        "bodyEn": "The metal cabinet on the left stores frequently used gauges, fixtures, and calibration supplies. It keeps the inspection area tidy and gives every measuring tool a fixed place.",
         "position": {
           "yaw": "-118deg",
           "pitch": "-8deg"

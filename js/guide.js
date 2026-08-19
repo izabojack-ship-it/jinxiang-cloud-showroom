@@ -919,6 +919,21 @@ export function createGuideController({
     els.openBtn?.setAttribute('aria-hidden', 'true');
   }
 
+  function pointTitle(point) {
+    return (lang === 'en' && point?.titleEn) ? point.titleEn : (point?.title || '');
+  }
+
+  function pointBody(point) {
+    return (lang === 'en' && point?.bodyEn) ? point.bodyEn : (point?.body || '');
+  }
+
+  function pointSpeakKey(sceneId, point) {
+    if (!sceneId || !point?.id) return null;
+    return lang === 'en' && point.bodyEn
+      ? `${sceneId}__${point.id}_en`
+      : `${sceneId}__${point.id}`;
+  }
+
   function renderPoiList(scene) {
     if (!els.poiList) return;
     const points = scene?.points || [];
@@ -929,11 +944,11 @@ export function createGuideController({
     }
     els.poiList.hidden = false;
     els.poiList.innerHTML = `
-      <p class="f360-guide__poi-label">機台單點介紹</p>
+      <p class="f360-guide__poi-label">${lang === 'en' ? 'Equipment highlights' : '機台單點介紹'}</p>
       <div class="f360-guide__poi-chips">
         ${points.map((p) => `
           <button type="button" class="f360-guide__poi-chip${p.id === activePointId ? ' is-active' : ''}" data-poi-id="${p.id}">
-            ${escapeHtml(p.title)}
+            ${escapeHtml(pointTitle(p))}
           </button>`).join('')}
       </div>`;
   }
@@ -977,12 +992,16 @@ export function createGuideController({
       presentCompanyIntro({ autoPlay: resume });
       return;
     }
-    // 場景介紹顯示中且有雙語文案：立即以新語言重新呈現
     const scene = getScene?.();
-    if (!activePointId && scene?.guide?.enabled && scene.guide.introEn
-      && els.root && !els.root.hidden) {
-      const resume = speaking || usingVideo;
-      stopSpeech();
+    if (!scene || !els.root || els.root.hidden) return;
+    const resume = speaking || usingVideo;
+    stopSpeech();
+    if (activePointId) {
+      const point = (scene.points || []).find((p) => p.id === activePointId);
+      if (point) presentPoint(point, scene);
+      return;
+    }
+    if (scene.guide?.enabled && (scene.guide.intro || scene.guide.introEn)) {
       presentSceneIntro(scene, { autoPlay: resume });
     }
   }
@@ -1010,8 +1029,9 @@ export function createGuideController({
     // 有英文文案時依目前語言切換；沒有則一律用中文
     const useEn = lang === 'en' && guide.introEn;
     const introText = (useEn ? guide.introEn : guide.intro) || '';
+    const sceneTitle = (useEn && scene.titleEn) ? scene.titleEn : scene.title;
     setScript({
-      title: useEn ? `${scene.title} · Introduction` : `${scene.title} · 場景介紹`,
+      title: useEn ? `${sceneTitle} · Introduction` : `${sceneTitle} · 場景介紹`,
       text: introText,
       pointId: null,
     });
@@ -1029,13 +1049,18 @@ export function createGuideController({
     companyMode = false;
     companyIntroPending = false;
     showPanel();
+    const title = pointTitle(point);
+    const body = pointBody(point);
     setScript({
-      title: point.title,
-      text: point.body || '',
+      title,
+      text: body,
       pointId: point.id,
     });
     const sceneId = scene?.id || getScene?.()?.id;
-    if (point.body) speak(`${point.title}。${point.body}`, { key: sceneId ? `${sceneId}__${point.id}` : null });
+    if (body) {
+      const spoken = lang === 'en' ? `${title}. ${body}` : `${title}。${body}`;
+      speak(spoken, { key: pointSpeakKey(sceneId, point), lang });
+    }
     onFocusPoint?.(point, scene);
   }
 
@@ -1045,16 +1070,19 @@ export function createGuideController({
       speak(c.text, { force: true, key: `company__intro_${lang}`, lang });
       return;
     }
-    const title = els.title?.textContent || '';
-    const text = els.text?.textContent || '';
-    if (!text) return;
     const scene = getScene?.();
     if (activePointId) {
-      // 機台介紹已含標題
-      const key = scene ? `${scene.id}__${activePointId}` : null;
-      speak(`${title}。${text}`, { force: true, key });
+      const point = (scene?.points || []).find((p) => p.id === activePointId);
+      if (!point) return;
+      const title = pointTitle(point);
+      const body = pointBody(point);
+      if (!body) return;
+      const spoken = lang === 'en' ? `${title}. ${body}` : `${title}。${body}`;
+      speak(spoken, { force: true, key: pointSpeakKey(scene?.id, point), lang });
       return;
     }
+    const text = els.text?.textContent || '';
+    if (!text) return;
     const useEn = lang === 'en' && scene?.guide?.introEn;
     const key = scene ? (useEn ? `${scene.id}__intro_en` : `${scene.id}__intro`) : null;
     speak(text, { force: true, key, lang: useEn ? 'en' : 'zh' });
