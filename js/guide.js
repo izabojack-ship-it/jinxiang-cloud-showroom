@@ -169,8 +169,12 @@ export function createGuideController({
   let speakStartAt = 0;
   let currentUtterLen = 0;
   let speakableChars = [];
-  // 中文語速估計（無 boundary 事件時的逐字進度後備）
-  const EST_CHARS_PER_SEC = 5.0;
+  let speakWeights = [];
+  let speakWeightTotal = 0;
+  let mediaCaptionRaf = 0;
+  // 無 boundary 事件時的後備字速（權重／秒；中文一字約 1）
+  const EST_WEIGHT_PER_SEC_ZH = 4.6;
+  const EST_WEIGHT_PER_SEC_EN = 11.5;
 
   /** 預生成語音（edge-tts 神經語音）：比瀏覽器 TTS 自然，缺檔時自動退回 TTS */
   const AUDIO_BASE = './media/guide/audio/';
@@ -394,14 +398,17 @@ export function createGuideController({
       usingVideo = true;
       setSpeaking(true);
       startVideoWatchdog();
+      startMediaCaptionSync(() => videoEl);
     });
     videoEl.addEventListener('timeupdate', () => {
       if (usingVideo && videoEl.duration > 0) {
-        setSpeechProgress(videoEl.currentTime / videoEl.duration);
+        lastBoundaryAt = Date.now();
+        setSpeechProgress(mediaSpeakRatio(videoEl));
       }
     });
     videoEl.addEventListener('ended', () => {
       stopVideoWatchdog();
+      stopMediaCaptionSync();
       usingVideo = false;
       setSpeaking(false);
       setSpeechProgress(1);
@@ -580,6 +587,7 @@ export function createGuideController({
     if (!videoEl) return;
     videoToken += 1;
     stopVideoWatchdog();
+    stopMediaCaptionSync();
     stopPackedComposite();
     try { videoEl.pause(); } catch { /* ignore */ }
     usingVideo = false;
@@ -614,13 +622,16 @@ export function createGuideController({
       usingAudio = true;
       setSpeaking(true);
       startAmpLoop();
+      startMediaCaptionSync(() => audioEl);
     });
     audioEl.addEventListener('timeupdate', () => {
       if (usingAudio && audioEl.duration > 0) {
-        setSpeechProgress(audioEl.currentTime / audioEl.duration);
+        lastBoundaryAt = Date.now();
+        setSpeechProgress(mediaSpeakRatio(audioEl));
       }
     });
     audioEl.addEventListener('ended', () => {
+      stopMediaCaptionSync();
       usingAudio = false;
       setSpeaking(false);
       setSpeechProgress(1);
@@ -676,6 +687,7 @@ export function createGuideController({
 
   function stopRecorded() {
     if (!audioEl) return;
+    stopMediaCaptionSync();
     audioEl.pause();
     audioEl.removeAttribute('src');
     usingAudio = false;
@@ -699,12 +711,13 @@ export function createGuideController({
     stopTalkRhythm();
     const step = () => {
       if (!speaking) return;
-      // boundary 事件有在動就交給它；否則用節奏器模擬說話動態
       if (Date.now() - lastBoundaryAt > 380) {
         talkTick();
-        if (currentUtterLen > 0) {
-          const est = ((Date.now() - speakStartAt) / 1000) * EST_CHARS_PER_SEC;
-          setSpeechProgress(Math.min(1, est / currentUtterLen));
+        // 錄音／影片已用實際時間對字幕，不要再用固定字速蓋掉
+        if (!usingAudio && !usingVideo && speakWeightTotal > 0) {
+          const rate = currentSpeakLang === 'en' ? EST_WEIGHT_PER_SEC_EN : EST_WEIGHT_PER_SEC_ZH;
+          const est = ((Date.now() - speakStartAt) / 1000) * rate;
+          setSpeechProgress(Math.min(1, est / speakWeightTotal));
         }
       }
       talkTimer = window.setTimeout(step, 130 + Math.random() * 170);
@@ -718,10 +731,50 @@ export function createGuideController({
     els.avatar?.classList.remove('is-tick');
   }
 
+  function charSpeakWeight(ch) {
+    if (/\s/.test(ch)) return 0.06;
+    if ('，、,;；'.includes(ch)) return 0.55;
+    if ('。！？!?'.includes(ch)) return 1.15;
+    if ('：:'.includes(ch)) return 0.4;
+    if ('—–-…'.includes(ch)) return 0.35;
+    if (/[A-Za-z]/.test(ch)) return 0.32;
+    if (/[0-9]/.test(ch)) return 0.38;
+    return 1;
+  }
+
+  function mediaSpeakRatio(el) {
+    const dur = el?.duration || 0;
+    if (dur <= 0) return 0;
+    const lead = Math.min(0.34, dur * 0.05);
+    const tail = Math.min(0.5, dur * 0.07);
+    return (el.currentTime - lead) / Math.max(0.05, dur - lead - tail);
+  }
+
+  function startMediaCaptionSync(getEl) {
+    stopMediaCaptionSync();
+    const step = () => {
+      const el = getEl?.();
+      if (!el || (!usingAudio && !usingVideo)) return;
+      if (el.duration > 0) {
+        lastBoundaryAt = Date.now();
+        setSpeechProgress(mediaSpeakRatio(el));
+      }
+      mediaCaptionRaf = window.requestAnimationFrame(step);
+    };
+    mediaCaptionRaf = window.requestAnimationFrame(step);
+  }
+
+  function stopMediaCaptionSync() {
+    window.cancelAnimationFrame(mediaCaptionRaf);
+    mediaCaptionRaf = 0;
+  }
+
   function renderSpeakableText(text) {
     if (!els.text) return;
     els.text.textContent = '';
     speakableChars = [];
+    speakWeights = [];
+    speakWeightTotal = 0;
     const frag = document.createDocumentFragment();
     for (const ch of String(text || '')) {
       const span = document.createElement('span');
@@ -729,6 +782,9 @@ export function createGuideController({
       span.textContent = ch;
       frag.appendChild(span);
       speakableChars.push(span);
+      const w = charSpeakWeight(ch);
+      speakWeights.push(w);
+      speakWeightTotal += w;
     }
     els.text.appendChild(frag);
   }
@@ -736,7 +792,15 @@ export function createGuideController({
   function setSpeechProgress(ratio) {
     const n = speakableChars.length;
     if (!n) return;
-    const upto = Math.floor(Math.max(0, Math.min(1, ratio)) * n);
+    const r = Math.max(0, Math.min(1, ratio));
+    const target = r * (speakWeightTotal || n);
+    let acc = 0;
+    let upto = 0;
+    for (let i = 0; i < n; i += 1) {
+      acc += speakWeights[i] ?? 1;
+      if (acc <= target + 1e-6) upto = i + 1;
+      else break;
+    }
     for (let i = 0; i < n; i += 1) {
       speakableChars[i].classList.toggle('is-said', i < upto);
     }
@@ -814,6 +878,7 @@ export function createGuideController({
   function stopSpeech() {
     stopVideo();
     stopRecorded();
+    stopMediaCaptionSync();
     if (speechSupported) window.speechSynthesis.cancel();
     currentUtterance = null;
     setSpeaking(false);
@@ -879,9 +944,12 @@ export function createGuideController({
     utter.onboundary = (event) => {
       lastBoundaryAt = Date.now();
       talkTick();
-      if (currentUtterLen > 0) {
+      if (speakWeightTotal > 0) {
         const idx = (event.charIndex || 0) + (event.charLength || 1);
-        setSpeechProgress(idx / currentUtterLen);
+        let w = 0;
+        const n = Math.min(idx, speakWeights.length);
+        for (let i = 0; i < n; i += 1) w += speakWeights[i];
+        setSpeechProgress(w / speakWeightTotal);
       }
     };
     utter.onend = () => {
