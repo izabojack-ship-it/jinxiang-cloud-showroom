@@ -1973,7 +1973,26 @@ body.is-place-mode .f360-guide-open {
     line-height: 1.45;
   }
 
-  .f360-subtitle__poi { display: none; }
+  /* 橫向仍保留機台選項：藏標籤、單行橫向滑動的精簡膠囊列 */
+  .f360-subtitle__poi .f360-guide__poi-label { display: none; }
+
+  .f360-subtitle__poi .f360-guide__poi-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 5px;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .f360-subtitle__poi .f360-guide__poi-chips::-webkit-scrollbar { display: none; }
+
+  .f360-subtitle__poi .f360-guide__poi-chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 3px 8px;
+    font-size: 0.62rem;
+  }
 
   .f360-subtitle__actions { gap: 5px; }
 
